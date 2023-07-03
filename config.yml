@@ -1,0 +1,4 @@
+sources:
+  local1:
+    !Local
+    folder: ./test
