@@ -1,4 +1,10 @@
 sources:
+  # This is a comment
   local1:
-    !Local
-    folder: ./test
+    source:
+      !Local
+      folder: ./test
+    encryption:
+      !Aes
+      key: 12345678901234567890123456789012
+      iv: 1234567890123456

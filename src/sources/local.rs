@@ -5,7 +5,7 @@ use tokio::fs::{File, remove_file};
 use tokio::io::AsyncReadExt;
 use tokio::io::AsyncWriteExt;
 
-use super::source::Source;
+use super::source::ISource;
 use super::error::SourceError;
 
 #[derive(Deserialize, Debug)]
@@ -14,7 +14,7 @@ pub struct Local {
 }
 
 #[async_trait]
-impl Source for Local {
+impl ISource for Local {
     async fn get(&self, descriptor: &[u8]) -> Result<Vec<u8>, SourceError> {
         let path = format!("{}/{}", self.folder, std::str::from_utf8(descriptor).unwrap());
         let mut file = File::open(path).await.map_err(|e| SourceError::new(format!("Could not open file: {}", e)))?;
@@ -36,7 +36,7 @@ impl Source for Local {
         Ok(())
     }
 
-    async fn create(&self) -> Result<Vec<u8>, SourceError> {
+    async fn create(&self, data: &[u8]) -> Result<Vec<u8>, SourceError> {
         let mut descriptor = rand::thread_rng().sample_iter(distributions::Alphanumeric).take(32).collect::<Vec<u8>>();
         let mut path_work = format!("{}/{}", self.folder, std::str::from_utf8(&descriptor).unwrap());
         while File::open(path_work).await.is_ok() {
@@ -44,7 +44,8 @@ impl Source for Local {
             path_work = format!("{}/{}", self.folder, std::str::from_utf8(&descriptor).unwrap());
         }
         let path = format!("{}/{}", self.folder, std::str::from_utf8(&descriptor).unwrap());
-        File::create(path).await.map_err(|e| SourceError::new(format!("Could not create file: {}", e)))?;
+        let mut file = File::create(path).await.map_err(|e| SourceError::new(format!("Could not create file: {}", e)))?;
+        file.write_all(data).await.map_err(|e| SourceError::new(format!("Could not write to file: {}", e)))?;
         Ok(descriptor)
     }
 }
