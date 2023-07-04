@@ -17,7 +17,7 @@ impl Global {
         random_key
     }
     
-    pub fn get(&self, name: &str) -> Option<&Source> {
+    pub fn get_source(&self, name: &str) -> Option<&Source> {
         self.sources.get(name)
     }
 }

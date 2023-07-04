@@ -5,6 +5,7 @@ mod global;
 mod source;
 mod sources;
 mod encryption;
+mod block;
 
 use global::Global;
 
@@ -12,7 +13,7 @@ use global::Global;
 async fn main() {
     let file = File::open("config.yml").unwrap();
     let global: Global = from_reader(file).unwrap();
-    let source = global.get(global.random_source()).unwrap();
+    let source = global.get_source(global.random_source()).unwrap();
     println!("{:?}", source);
     let block = vec![104, 101, 108, 108, 111];
     let descriptor = source.create(&block).await.unwrap();
