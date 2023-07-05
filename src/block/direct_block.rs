@@ -3,7 +3,7 @@ use serde::{Serialize, Deserialize};
 use std::ops::Range;
 use crypto::sha1::Sha1;
 use crypto::digest::Digest;
-use crate::{global::Global, sources::error::SourceError};
+use crate::{global::Global, sources::error::SourceError, source::Source};
 
 
 use super::block::{IBlock, BlockType};
@@ -35,8 +35,8 @@ async fn put_to_source(name: &str, descriptor: &[u8], data: Vec<u8>, global: &Gl
 
 #[async_trait]
 impl IBlock for DirectBlock {
-    fn range(&self) -> &Range<usize> {
-        &self.range
+    fn range(&self) -> Range<usize> {
+        self.range.to_owned()
     }
 
     fn intersects(&self, range: Range<usize>) -> bool {
@@ -89,45 +89,65 @@ impl IBlock for DirectBlock {
         Ok(())
     }
 
+    async fn put(&mut self, global: &Global, range: Range<usize>, data: Vec<u8>) -> Result<(), SourceError> {
+        let old_data = self.get(&global, self.range().clone()).await?;
+        let mut new_data = Vec::new();
+        let start = range.start - self.range().start;
+        let end = range.end - self.range().start;
+        new_data.extend_from_slice(&old_data[..start]);
+        new_data.extend_from_slice(&data);
+        new_data.extend_from_slice(&old_data[end..]);
+        self.replace(&global, new_data).await
+    }
+
     async fn heal(&self, global: &Global) -> Result<(), SourceError> {
         Ok(())
     }
 }
 
 impl DirectBlock {
-    pub async fn new(global: &Global, range: Range<usize>, data: &Vec<u8>) -> Result<DirectBlock, SourceError> {
-        let mut sources: Vec<(String, Vec<u8>)> = Vec::new();
-        let mut redundancy = global.redundancy;
-        while redundancy > 0 {
-            let name = global.random_source();
-            if sources.iter().any(|(name, _)| name.eq(name)) {
-                continue;
-            }
-            let source = match global.get_source(&name) {
-                Some(source) => source,
-                None => continue
-            };
-            let descriptor = match source.create(data).await {
-                Ok(descriptor) => descriptor,
-                Err(_) => continue
-            };
-            sources.push((name.clone(), descriptor));
-            redundancy -= 1;
-        }
-
-        let mut sha = Sha1::new();
-        sha.input(data);
-        let mut result = vec![0; sha.output_bytes()];
-        sha.result(&mut result);
-
-        Ok(DirectBlock {
-            range,
-            sources,
-            sha1: result,
-        })
-    }
-
     pub fn to_enum(self) -> BlockType {
         BlockType::DirectBlock(self)
+    }
+
+    pub async fn create(
+        global: &Global,
+        range: Range<usize>,
+        data: &Vec<u8>,
+    ) -> Result<(DirectBlock, usize), SourceError> {
+        // TODO: redundancy
+        let mut source_name = global.random_source();
+        let mut source: &Source;
+        let descriptor: Vec<u8>;
+        let mut block: Vec<u8>;
+        loop {
+            source = match global.get_source(&source_name) {
+                Some(source) => source,
+                None => {
+                    source_name = global.random_source();
+                    continue;
+                }
+            };
+            block = data.iter().take(source.max_size()).map(|x| *x).collect();
+            descriptor = match source.create(&block).await {
+                Ok(descriptor) => descriptor,
+                Err(_) => {
+                    source_name = global.random_source();
+                    continue;
+                }
+            };
+            break
+        }
+        let mut sha = Sha1::new();
+        sha.input(&block);
+        let mut hash = vec![0; sha.output_bytes()];
+        sha.result(&mut hash);
+        let direct_block = DirectBlock {
+            range,
+            sources: vec![(source_name.clone(), descriptor)],
+            sha1: hash,
+        };
+        Ok((direct_block, source.max_size()))
+
     }
 }

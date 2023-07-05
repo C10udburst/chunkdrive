@@ -10,11 +10,22 @@ use super::error::SourceError;
 
 #[derive(Deserialize, Debug)]
 pub struct Local {
-    pub folder: String,
+    folder: String,
+
+    #[serde(default = "default_max_size")]
+    max_size: usize,
+}
+
+fn default_max_size() -> usize {
+    1024 * 1024 * 1024
 }
 
 #[async_trait]
 impl ISource for Local {
+    fn max_size(&self) -> usize {
+        self.max_size
+    }
+
     async fn get(&self, descriptor: &[u8]) -> Result<Vec<u8>, SourceError> {
         let path = format!("{}/{}", self.folder, std::str::from_utf8(descriptor).unwrap());
         let mut file = File::open(path).await.map_err(|e| SourceError::new(format!("Could not open file: {}", e)))?;
@@ -63,7 +74,7 @@ fn test_local() {
     use super::local::Local;
 
     let rt = Runtime::new().unwrap();
-    let local = Local { folder: env::temp_dir().to_str().unwrap().to_string() };
+    let local = Local { folder: env::temp_dir().to_str().unwrap().to_string(), max_size: 024*1024 };
     let data1 = b"Hello World!";
     let descriptor = rt.block_on(local.create(data1)).unwrap();
     let data1_out = rt.block_on(local.get(&descriptor)).unwrap();

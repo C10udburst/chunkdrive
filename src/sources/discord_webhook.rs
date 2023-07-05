@@ -25,6 +25,10 @@ struct MessageResponse {
 
 #[async_trait]
 impl ISource for DiscordWebhook {
+    fn max_size(&self) -> usize {
+        24 * 1024 * 1024
+    }
+
     async fn get(&self, descriptor: &[u8]) -> Result<Vec<u8>, SourceError> {
         let url = format!("{}/messages/{}", self.url, String::from_utf8(descriptor.to_vec()).unwrap());
         let client = reqwest::Client::new();

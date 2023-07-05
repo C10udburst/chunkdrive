@@ -2,6 +2,7 @@ use super::encryption::IEncryption;
 use serde::Deserialize;
 use async_trait::async_trait;
 use crypto::{aes, blockmodes, buffer::{WriteBuffer, ReadBuffer}};
+use tokio::runtime::Runtime;
 
 #[derive(Deserialize, Debug)]
 pub struct Aes {
@@ -64,5 +65,21 @@ impl IEncryption for Aes {
         
         Ok(result)
     }
+}
 
+#[test]
+fn test_aes() {
+    use tokio::runtime::Runtime;
+
+    let rt = Runtime::new().unwrap();
+
+    let aes = Aes {
+        key: "01234567890123456789012345678901".to_string(),
+        iv: "0123456789012345".to_string(),
+    };
+    let data = b"Esse consectetur quod ut corporis repellat. Quis voluptatem natus et nostrum nulla qui quo cum.";
+    let encrypted = rt.block_on(aes.encrypt(data)).unwrap();
+    assert_ne!(data, &encrypted[..]);
+    let decrypted = rt.block_on(aes.decrypt(&encrypted)).unwrap();
+    assert_eq!(data, &decrypted[..]);
 }

@@ -7,6 +7,7 @@ use super::local::Local;
 
 #[async_trait]
 pub trait ISource {
+    fn max_size(&self) -> usize;
     async fn get(&self, descriptor: &[u8]) -> Result<Vec<u8>, SourceError>;
     async fn put(&self, descriptor: &[u8], data: &[u8]) -> Result<(), SourceError>;
     async fn delete(&self, descriptor: &[u8]) -> Result<(), SourceError>;
@@ -39,8 +40,19 @@ macro_rules! impl_method {
             }
         }
     };
+    (sync $method:ident, ($($arg:ident: $arg_type:ty),*) -> $return_type:ty) => {
+        impl SourceType {
+            pub fn $method(&self, $($arg: $arg_type),*) -> $return_type {
+                match self {
+                    SourceType::DiscordWebhook(source) => source.$method($($arg),*),
+                    SourceType::Local(source) => source.$method($($arg),*),
+                }
+            }
+        }
+    };
 }
 
+impl_method!(sync max_size, () -> usize);
 impl_method!(get, (descriptor: &[u8]) -> Result<Vec<u8>, SourceError>);
 impl_method!(put, (descriptor: &[u8], data: &[u8]) -> Result<(), SourceError>);
 impl_method!(delete, (descriptor: &[u8]) -> Result<(), SourceError>);

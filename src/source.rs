@@ -11,6 +11,10 @@ pub struct Source {
 }
 
 impl Source {
+    pub fn max_size(&self) -> usize {
+        self.source.max_size()
+    }
+
     pub async fn get(&self, descriptor: &[u8]) -> Result<Vec<u8>, SourceError> {
         let encrypted = match self.source.get(descriptor).await {
             Ok(encrypted) => encrypted,
