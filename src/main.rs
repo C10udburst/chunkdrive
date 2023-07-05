@@ -8,6 +8,7 @@ mod sources;
 mod encryption;
 mod block;
 mod stored;
+mod inodes;
 
 use global::Global;
 
@@ -38,6 +39,10 @@ sources:
     source:
       !Local
       folder: {}
+    encryption:
+      !Aes
+      key: "12345678901234567890123456789012"
+      iv: "1234567890123456"
 "#, env::temp_dir().to_str().unwrap());
 
     let global: Global = serde_yaml::from_str(&config).unwrap();
@@ -52,4 +57,5 @@ sources:
         deserialized.get(&global, deserialized.range(&global).await.unwrap()).await.unwrap()
     });
     assert_eq!(data, received);
+    rt.block_on(stored.delete(&global)).unwrap();
 }
