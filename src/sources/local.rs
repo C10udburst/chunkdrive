@@ -1,7 +1,7 @@
 use serde::Deserialize;
 use async_trait::async_trait;
 use rand::{Rng, distributions};
-use tokio::fs::{File, remove_file};
+use tokio::fs::{File, OpenOptions, remove_file};
 use tokio::io::AsyncReadExt;
 use tokio::io::AsyncWriteExt;
 
@@ -25,7 +25,12 @@ impl ISource for Local {
 
     async fn put(&self, descriptor: &[u8], data: &[u8]) -> Result<(), SourceError> {
         let path = format!("{}/{}", self.folder, std::str::from_utf8(descriptor).unwrap());
-        let mut file = File::open(path).await.map_err(|e| SourceError::new(format!("Could not open file: {}", e)))?;
+        let mut file = OpenOptions::new()
+            .write(true)
+            .create(false)
+            .open(path)
+            .await
+            .map_err(|e| SourceError::new(format!("Could not open file: {}", e)))?;
         file.write_all(data).await.map_err(|e| SourceError::new(format!("Could not write to file: {}", e)))?;
         Ok(())
     }
@@ -48,4 +53,24 @@ impl ISource for Local {
         file.write_all(data).await.map_err(|e| SourceError::new(format!("Could not write to file: {}", e)))?;
         Ok(descriptor)
     }
+}
+
+#[test]
+fn test_local() {
+    use std::env;
+    use tokio::runtime::Runtime;
+    use super::source::ISource;
+    use super::local::Local;
+
+    let rt = Runtime::new().unwrap();
+    let local = Local { folder: env::temp_dir().to_str().unwrap().to_string() };
+    let data1 = b"Hello World!";
+    let descriptor = rt.block_on(local.create(data1)).unwrap();
+    let data1_out = rt.block_on(local.get(&descriptor)).unwrap();
+    assert_eq!(data1, &data1_out[..]);
+    let data2 = b"Hello World! 2";
+    rt.block_on(local.put(&descriptor, data2)).unwrap();
+    let data2_out = rt.block_on(local.get(&descriptor)).unwrap();
+    assert_eq!(data2, &data2_out[..]);
+    rt.block_on(local.delete(&descriptor)).unwrap();
 }
