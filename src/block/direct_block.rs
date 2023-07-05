@@ -35,12 +35,12 @@ async fn put_to_source(name: &str, descriptor: &[u8], data: Vec<u8>, global: &Gl
 
 #[async_trait]
 impl IBlock for DirectBlock {
-    fn range(&self) -> Range<usize> {
-        self.range.to_owned()
+    async fn range(&self, _global: &Global) -> Result<Range<usize>, SourceError> {
+        Ok(self.range.clone())
     }
 
-    fn intersects(&self, range: Range<usize>) -> bool {
-        self.range.start < range.end && self.range.end > range.start
+    async fn intersects(&self, range: Range<usize>, _global: &Global) -> Result<bool, SourceError> {
+        Ok(self.range.start <= range.start && self.range.end >= range.end)
     }
 
     async fn get(&self, global: &Global, range: Range<usize>) -> Result<Vec<u8>, SourceError> {
@@ -90,17 +90,28 @@ impl IBlock for DirectBlock {
     }
 
     async fn put(&mut self, global: &Global, range: Range<usize>, data: Vec<u8>) -> Result<(), SourceError> {
-        let old_data = self.get(&global, self.range().clone()).await?;
+        let old_data = self.get(&global, self.range.to_owned()).await?;
         let mut new_data = Vec::new();
-        let start = range.start - self.range().start;
-        let end = range.end - self.range().start;
+        let start = range.start - self.range.start;
+        let end = range.end - self.range.end;
         new_data.extend_from_slice(&old_data[..start]);
         new_data.extend_from_slice(&data);
         new_data.extend_from_slice(&old_data[end..]);
         self.replace(&global, new_data).await
     }
 
-    async fn heal(&self, global: &Global) -> Result<(), SourceError> {
+    async fn heal(&mut self, global: &Global) -> Result<(), SourceError> {
+        let data = self.get(global, self.range.clone()).await?;
+        let mut sha = Sha1::new();
+        for (name, descriptor) in &self.sources {
+            let source_data = load_from_source(name, descriptor, global).await?;
+            sha.input(&source_data);
+            let mut result = vec![0; sha.output_bytes()];
+            sha.result(&mut result);
+            if result != self.sha1 {
+                put_to_source(name, descriptor, data.clone(), global).await?;
+            }
+        }
         Ok(())
     }
 }
