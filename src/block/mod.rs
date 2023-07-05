@@ -1,3 +1,2 @@
 pub mod block;
-pub mod single_byte;
-pub mod stored;
+pub mod direct_block;

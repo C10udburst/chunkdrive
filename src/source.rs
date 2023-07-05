@@ -12,13 +12,13 @@ pub struct Source {
 
 impl Source {
     pub async fn get(&self, descriptor: &[u8]) -> Result<Vec<u8>, SourceError> {
-        let encrypted = match self.source.get().get(descriptor).await {
+        let encrypted = match self.source.get(descriptor).await {
             Ok(encrypted) => encrypted,
             Err(error) => return Err(error),
         };
         match &self.encryption {
             Some(encryption) => {
-                let decrypted = encryption.get().decrypt(&encrypted).await.unwrap();
+                let decrypted = encryption.decrypt(&encrypted).await.unwrap();
                 return Ok(decrypted);
             },
             None => return Ok(encrypted),
@@ -27,17 +27,17 @@ impl Source {
 
     pub async fn put(&self, descriptor: &[u8], data: &[u8]) -> Result<(), SourceError> {
         let encrypted = match &self.encryption {
-            Some(encryption) => encryption.get().encrypt(data).await.unwrap(),
+            Some(encryption) => encryption.encrypt(data).await.unwrap(),
             None => data.to_vec(),
         };
-        match self.source.get().put(descriptor, &encrypted).await {
+        match self.source.put(descriptor, &encrypted).await {
             Ok(_) => return Ok(()),
             Err(error) => return Err(error),
         }
     }
 
     pub async fn delete(&self, descriptor: &[u8]) -> Result<(), SourceError> {
-        match self.source.get().delete(descriptor).await {
+        match self.source.delete(descriptor).await {
             Ok(_) => return Ok(()),
             Err(error) => return Err(error),
         }
@@ -45,10 +45,10 @@ impl Source {
 
     pub async fn create(&self, data: &[u8]) -> Result<Vec<u8>, SourceError> {
         let encrypted = match &self.encryption {
-            Some(encryption) => encryption.get().encrypt(data).await.unwrap(),
+            Some(encryption) => encryption.encrypt(data).await.unwrap(),
             None => data.to_vec(),
         };
-        match self.source.get().create(&encrypted).await {
+        match self.source.create(&encrypted).await {
             Ok(descriptor) => return Ok(descriptor),
             Err(error) => return Err(error),
         }

@@ -15,9 +15,24 @@ pub enum EncryptionType {
 }
 
 impl EncryptionType {
-    pub fn get(&self) -> &dyn IEncryption {
+    pub fn as_dyn(&self) -> &dyn IEncryption {
         match self {
-            EncryptionType::Aes(encryption) => return encryption
+            EncryptionType::Aes(encryption) => encryption,
         }
     }
 }
+
+macro_rules! impl_method {
+    ($method:ident, ($($arg:ident: $arg_type:ty),*) -> $return_type:ty) => {
+        impl EncryptionType {
+            pub async fn $method(&self, $($arg: $arg_type),*) -> $return_type {
+                match self {
+                    EncryptionType::Aes(encryption) => encryption.$method($($arg),*).await,
+                }
+            }
+        }
+    };
+}
+
+impl_method!(encrypt, (data: &[u8]) -> Result<Vec<u8>, ()>);
+impl_method!(decrypt, (data: &[u8]) -> Result<Vec<u8>, ()>);

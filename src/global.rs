@@ -8,7 +8,12 @@ use super::source::Source;
 #[derive(Deserialize, Debug)]
 pub struct Global {
     sources: HashMap<String, Source>,
+
+    #[serde(default = "default_redundancy")]
+    pub redundancy: usize,
 }
+
+fn default_redundancy() -> usize { 1 }
 
 impl Global {
     pub fn random_source(&self) -> &String {

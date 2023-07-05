@@ -1,3 +1,4 @@
+use block::direct_block::DirectBlock;
 use serde_yaml::from_reader;
 use std::fs::File;
 
@@ -13,10 +14,9 @@ use global::Global;
 async fn main() {
     let file = File::open("config.yml").unwrap();
     let global: Global = from_reader(file).unwrap();
-    let source = global.get_source(global.random_source()).unwrap();
-    println!("{:?}", source);
-    let block = vec![104, 101, 108, 108, 111];
-    let descriptor = source.create(&block).await.unwrap();
-    let data = source.get(&descriptor).await.unwrap();
-    assert_eq!(block, data);
+    let data: Vec<u8> = "Hello, world!".as_bytes().to_vec();
+    let block = DirectBlock::new(&global, 0..data.len(), &data).await.unwrap().to_enum();
+    println!("{:?}", block);
+    let restored = block.get(&global, 0..data.len()).await.unwrap();
+    assert_eq!(data, restored);
 }
