@@ -1,4 +1,3 @@
-use block::{indirect_block::IndirectBlock};
 use serde_yaml::from_reader;
 use std::fs::File;
 
@@ -9,27 +8,28 @@ mod encryption;
 mod block;
 mod stored;
 mod inodes;
+mod cli;
 
 use global::Global;
 
-use crate::{stored::Stored, block::block::BlockType};
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     let file = File::open("config.yml").unwrap();
     let global: Global = from_reader(file).unwrap();
-    let data: Vec<u8> = "Hello, world!".as_bytes().to_vec();
-    let block = IndirectBlock::create(&global, &data).await.unwrap();
-    println!("{:?}", block);
-    let stored = Stored::new(&global, &block).await.unwrap();
-    println!("{:?}", stored);
-}
+    let shell: bool = std::env::args().any(|arg| arg == "--shell");
+    if shell {
+      cli::shell(global).await;
+    }
+  }
 
 
 #[test]
 fn stored_single_block() {
     use std::env;
     use tokio::runtime::Runtime;
+    use block::{indirect_block::IndirectBlock, block::BlockType};
+    use crate::{stored::Stored};
 
     let rt = Runtime::new().unwrap();
 
@@ -43,6 +43,7 @@ sources:
       !Aes
       key: "12345678901234567890123456789012"
       iv: "1234567890123456"
+services:
 "#, env::temp_dir().to_str().unwrap());
 
     let global: Global = serde_yaml::from_str(&config).unwrap();
@@ -54,7 +55,7 @@ sources:
     let received = rt.block_on(async {
         let deserialized: BlockType = stored.get(&global).await.unwrap();
         println!("let deserialized = {:?}", deserialized);
-        deserialized.get(&global, deserialized.range(&global).await.unwrap()).await.unwrap()
+        deserialized.get(&global, &deserialized.range(&global).await.unwrap()).await.unwrap()
     });
     assert_eq!(data, received);
     rt.block_on(stored.delete(&global)).unwrap();

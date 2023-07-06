@@ -2,11 +2,11 @@ use async_trait::async_trait;
 use async_recursion::async_recursion;
 use serde::{Serialize, Deserialize};
 use std::ops::Range;
-use crate::{global::Global, sources::error::SourceError, stored::Stored};
+use crate::{global::Global, sources::error::SourceError};
 
 use super::{block::{IBlock, BlockType}, direct_block::DirectBlock, stored_block::StoredBlock};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct IndirectBlock {
     blocks: Vec<BlockType>
 }
@@ -19,35 +19,82 @@ impl IBlock for IndirectBlock {
         Ok(start..end)
     }
 
-    async fn intersects(&self, range: Range<usize>, global: &Global) -> Result<bool, SourceError> {
+    async fn intersects(&self, range: &Range<usize>, global: &Global) -> Result<bool, SourceError> {
         let self_range = self.range(global).await?;
         Ok(self_range.start <= range.start && self_range.end >= range.end)
     }
 
-    async fn get(&self, global: &Global, range: Range<usize>) -> Result<Vec<u8>, SourceError> {
+    async fn get(&self, global: &Global, range: &Range<usize>) -> Result<Vec<u8>, SourceError> {
         let mut data = Vec::new();
         for block in &self.blocks {
-            if block.intersects(range.clone(), global).await? {
-                data.append(&mut block.get(global, range.clone()).await?);
+            if block.intersects(range, global).await? {
+                data.append(&mut block.get(global, range).await?);
             }
         }
         Ok(data)
     }
 
-    async fn replace(&mut self, global: &Global, data: Vec<u8>) -> Result<(), SourceError> {
+    async fn replace(&mut self, global: &Global, data: &Vec<u8>) -> Result<(), SourceError> {
         for block in &mut self.blocks {
             let slice = block.range(global).await?;
-            block.replace(global, data[slice.clone()].to_vec()).await?;
+            block.replace(global, &data[slice.clone()].to_vec()).await?;
         }
         Ok(())
     }
 
-    async fn put(&mut self, global: &Global, range: Range<usize>, data: Vec<u8>) -> Result<(), SourceError> {
+    async fn put(&mut self, global: &Global, range: &Range<usize>, data: &Vec<u8>) -> Result<(), SourceError> {
         for block in &mut self.blocks {
-            if block.intersects(range.clone(), global).await? {
-                block.put(global, range.clone(), data.clone()).await?;
+            if block.intersects(range, global).await? {
+                block.put(global, range, data).await?;
             }
         }
+        Ok(())
+    }
+
+    async fn truncate(&mut self, global: &Global, range: &Range<usize>, data: &Vec<u8>) -> Result<(), SourceError> {
+        let mut to_delete: Vec<usize> = Vec::new();
+        
+        let i = 0;
+        for block in &mut self.blocks {
+            if block.intersects(range, global).await? {
+                block.truncate(global, range, data).await?;
+            }
+            if block.range(global).await?.start > range.end {
+                to_delete.push(i);
+            }
+        }
+        
+        for block in to_delete {
+            match self.blocks.remove(block).delete(global).await {
+                Ok(_) => {},
+                Err(_) => {}
+            }
+        }
+        
+        Ok(())
+    }
+
+    async fn extend(&mut self, global: &Global, range: &Range<usize>, data: &Vec<u8>) -> Result<(), SourceError> {
+        let mut start = 0;
+        for block in &mut self.blocks {
+            if block.intersects(range, global).await? {
+                block.extend(global, range, data).await?;
+            }
+            start = block.range(global).await?.end + 1;
+        }
+
+        let end = range.end;
+        while start < end && self.blocks.len() < global.max_direct_blocks {
+            let (block, block_end) = DirectBlock::create(global, &(start..end), &data[start..end].to_vec()).await?;
+            self.blocks.push(block.to_enum());
+            start = block_end + 1;
+        }
+        if start < end {
+            let block = IndirectBlock::create(global, &data[start..end].to_vec()).await?;
+            let stored = StoredBlock::create(global, block.to_enum()).await?;
+            self.blocks.push(stored.to_enum());
+        }
+              
         Ok(())
     }
 
@@ -78,7 +125,7 @@ impl IndirectBlock {
         let end = data.len();
         let direct = 0;
         while start < end && direct < global.max_direct_blocks {
-            let (block, block_end) = DirectBlock::create(global, start..end, &data[start..end].to_vec()).await?;
+            let (block, block_end) = DirectBlock::create(global, &(start..end), &data[start..end].to_vec()).await?;
             blocks.push(block.to_enum());
             start = block_end + 1;
         }

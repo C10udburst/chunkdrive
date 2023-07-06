@@ -5,7 +5,7 @@ use crate::{global::Global, sources::error::SourceError, stored::Stored};
 
 use super::{block::{IBlock, BlockType}};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct StoredBlock {
     block: Stored
 }
@@ -17,26 +17,40 @@ impl IBlock for StoredBlock {
         block.range(global).await
     }
 
-    async fn intersects(&self, range: Range<usize>, global: &Global) -> Result<bool, SourceError> {
+    async fn intersects(&self, range: &Range<usize>, global: &Global) -> Result<bool, SourceError> {
         let block = self.block.get::<BlockType>(global).await?;
         block.intersects(range, global).await
     }
 
-    async fn get(&self, global: &Global, range: Range<usize>) -> Result<Vec<u8>, SourceError> {
+    async fn get(&self, global: &Global, range: &Range<usize>) -> Result<Vec<u8>, SourceError> {
         let block = self.block.get::<BlockType>(global).await?;
         block.get(global, range).await
     }
 
-    async fn replace(&mut self, global: &Global, data: Vec<u8>) -> Result<(), SourceError> {
+    async fn replace(&mut self, global: &Global, data: &Vec<u8>) -> Result<(), SourceError> {
         let mut block = self.block.get::<BlockType>(global).await?;
         block.replace(global, data).await?;
         self.block.put(global, &block).await?;
         Ok(())
     }
 
-    async fn put(&mut self, global: &Global, range: Range<usize>, data: Vec<u8>) -> Result<(), SourceError> {
+    async fn put(&mut self, global: &Global, range: &Range<usize>, data: &Vec<u8>) -> Result<(), SourceError> {
         let mut block = self.block.get::<BlockType>(global).await?;
         block.put(global, range, data).await?;
+        self.block.put(global, &block).await?;
+        Ok(())
+    }
+
+    async fn truncate(&mut self, global: &Global, range: &Range<usize>, data: &Vec<u8>) -> Result<(), SourceError> {
+        let mut block = self.block.get::<BlockType>(global).await?;
+        block.truncate(global, range, data).await?;
+        self.block.put(global, &block).await?;
+        Ok(())
+    }
+
+    async fn extend(&mut self, global: &Global, range: &Range<usize>, data: &Vec<u8>) -> Result<(), SourceError> {
+        let mut block = self.block.get::<BlockType>(global).await?;
+        block.extend(global, range, data).await?;
         self.block.put(global, &block).await?;
         Ok(())
     }

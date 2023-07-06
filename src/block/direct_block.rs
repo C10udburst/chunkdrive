@@ -8,7 +8,7 @@ use crate::{global::Global, sources::error::SourceError, source::Source};
 
 use super::block::{IBlock, BlockType};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct DirectBlock {
     range: Range<usize>,
     sources: Vec<(String, Vec<u8>)>,
@@ -36,21 +36,21 @@ async fn put_to_source(name: &str, descriptor: &[u8], data: Vec<u8>, global: &Gl
 #[async_trait]
 impl IBlock for DirectBlock {
     async fn range(&self, _global: &Global) -> Result<Range<usize>, SourceError> {
-        Ok(self.range.clone())
+        Ok(self.range.to_owned())
     }
 
-    async fn intersects(&self, range: Range<usize>, _global: &Global) -> Result<bool, SourceError> {
+    async fn intersects(&self, range: &Range<usize>, _global: &Global) -> Result<bool, SourceError> {
         Ok(self.range.start <= range.start && self.range.end >= range.end)
     }
 
-    async fn get(&self, global: &Global, range: Range<usize>) -> Result<Vec<u8>, SourceError> {
+    async fn get(&self, global: &Global, range: &Range<usize>) -> Result<Vec<u8>, SourceError> {
         let mut data = Vec::new();
         for (name, descriptor) in &self.sources {
             let mut source_data = load_from_source(name, descriptor, global).await?;
             let start = if range.start < self.range.start { 0 } else { range.start - self.range.start };
             let end = if range.end > self.range.end { source_data.len() } else { range.end - self.range.start };
             data.extend(source_data.drain(start..end));
-            let mut sha = Sha1::new();
+            let mut sha: Sha1 = Sha1::new();
             sha.input(&data);
             let mut result = vec![0; sha.output_bytes()];
             sha.result(&mut result);
@@ -62,7 +62,7 @@ impl IBlock for DirectBlock {
         Ok(data)
     }
 
-    async fn replace(&mut self, global: &Global, data: Vec<u8>) -> Result<(), SourceError> {
+    async fn replace(&mut self, global: &Global, data: &Vec<u8>) -> Result<(), SourceError> {
         for (name, descriptor) in &self.sources {
             put_to_source(name, descriptor, data.clone(), global).await?;
         }
@@ -89,19 +89,34 @@ impl IBlock for DirectBlock {
         Ok(())
     }
 
-    async fn put(&mut self, global: &Global, range: Range<usize>, data: Vec<u8>) -> Result<(), SourceError> {
-        let old_data = self.get(&global, self.range.to_owned()).await?;
+    async fn put(&mut self, global: &Global, range: &Range<usize>, data: &Vec<u8>) -> Result<(), SourceError> {
+        let old_data = self.get(&global, &self.range).await?;
         let mut new_data = Vec::new();
         let start = range.start - self.range.start;
         let end = range.end - self.range.end;
         new_data.extend_from_slice(&old_data[..start]);
         new_data.extend_from_slice(&data);
         new_data.extend_from_slice(&old_data[end..]);
-        self.replace(&global, new_data).await
+        self.replace(&global, &new_data).await
+    }
+
+    async fn truncate(&mut self, global: &Global, range: &Range<usize>, data: &Vec<u8>) -> Result<(), SourceError> {
+        let old_data = self.get(&global, &self.range).await?;
+        let mut new_data = Vec::new();
+        let start = range.start - self.range.start;
+        let end = range.end - self.range.end;
+        new_data.extend_from_slice(&old_data[..start]);
+        new_data.extend_from_slice(&data);
+        new_data.extend_from_slice(&old_data[end..]);
+        self.replace(&global, &new_data).await
+    }
+
+    async fn extend(&mut self, global: &Global, range: &Range<usize>, data: &Vec<u8>) -> Result<(), SourceError> {
+        self.put(&global, &range, &data).await
     }
 
     async fn heal(&mut self, global: &Global) -> Result<(), SourceError> {
-        let data = self.get(global, self.range.clone()).await?;
+        let data = self.get(global, &self.range).await?;
         let mut sha = Sha1::new();
         for (name, descriptor) in &self.sources {
             let source_data = load_from_source(name, descriptor, global).await?;
@@ -123,7 +138,7 @@ impl DirectBlock {
 
     pub async fn create(
         global: &Global,
-        range: Range<usize>,
+        range: &Range<usize>,
         data: &Vec<u8>,
     ) -> Result<(DirectBlock, usize), SourceError> {
         // TODO: redundancy
@@ -154,7 +169,7 @@ impl DirectBlock {
         let mut hash = vec![0; sha.output_bytes()];
         sha.result(&mut hash);
         let direct_block = DirectBlock {
-            range,
+            range: range.to_owned(),
             sources: vec![(source_name.clone(), descriptor)],
             sha1: hash,
         };
