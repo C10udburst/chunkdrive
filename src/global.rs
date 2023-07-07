@@ -15,7 +15,6 @@ pub struct Global {
     #[serde(default = "default_direct_block_count")]
     pub direct_block_count: usize,
     
-    
     #[serde(default = "default_root_path")]
     pub root_path: String,
 }

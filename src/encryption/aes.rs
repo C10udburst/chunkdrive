@@ -96,7 +96,7 @@ impl Encryption for Aes {
         );
 
         let mut final_result = Vec::<u8>::new();
-        let mut read_buffer = buffer::RefReadBuffer::new(&data.as_slice());
+        let mut read_buffer = buffer::RefReadBuffer::new(&data[..]);
         let mut buffer = [0; 4096];
         let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
 
@@ -129,7 +129,7 @@ impl Encryption for Aes {
         );
 
         let mut final_result = Vec::<u8>::new();
-        let mut read_buffer = buffer::RefReadBuffer::new(&data.as_slice());
+        let mut read_buffer = buffer::RefReadBuffer::new(&data[..]);
         let mut buffer = [0; 4096];
         let mut write_buffer = buffer::RefWriteBuffer::new(&mut buffer);
 

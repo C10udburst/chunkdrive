@@ -24,8 +24,10 @@ impl Block for IndirectBlock {
             Some(block) => block,
             None => panic!("This should never happen"),
         };
+
         let first_range = first.range(global.clone()).await?;
         let last_range = last.range(global.clone()).await?;
+
         Ok(first_range.start..last_range.end)
     }
 
@@ -43,27 +45,29 @@ impl Block for IndirectBlock {
     }
 
     async fn put(&mut self, global: Arc<Global>, data: Vec<u8>, range: Range<usize>) -> Result<(), String> {
-        let start = range.start;
+        let start_offset = range.start;
+        let mut start = range.start;
         
         for block in self.blocks.iter_mut() {
             let block_range = block.range(global.clone()).await?;
             if block_range.end <= start { break; }
-            let offset_range = start..(start + data.len());
-            let slice = data.get(offset_range.clone()).unwrap().to_vec();
-            block.put(global.clone(), slice, block_range).await?;
+            let slice = data[(start-start_offset)..block_range.end].to_vec();
+            block.put(global.clone(), slice, block_range.clone()).await?;
+            start = block_range.end;
         }
 
+        start = self.blocks.last().unwrap().range(global.clone()).await?.end;
+
         // if data is left, we create new blocks just like we did in the create function
-        let mut start: usize = start + data.len();
         while start < range.end && self.blocks.len() < global.direct_block_count {
-            let block = DirectBlock::create(global.clone(), data.clone(), start).await?;
+            let block = DirectBlock::create(global.clone(), data[(start-start_offset)..].to_vec(), start).await?;
             let range = block.range(global.clone()).await?;
             start = range.end;
             self.blocks.push(block.to_enum());
         }
         // if there is still data left, we create a stored block
         if start < range.end {
-            let slice = data.get(start..range.end).unwrap().to_vec();
+            let slice = data[start-start_offset..].to_vec();
             let block = StoredBlock::create(global, slice, start).await?;
             self.blocks.push(block.to_enum());
         }
@@ -78,17 +82,18 @@ impl Block for IndirectBlock {
 
     async fn create(global: Arc<Global>, data: Vec<u8>, start: usize) -> Result<BlockType, String> {
         let mut blocks = Vec::new();
+        let slice_offset = start;
         let mut start = start;
         let end = start + data.len();
         while start < end && blocks.len() < global.direct_block_count {
-            let block = DirectBlock::create(global.clone(), data.clone(), start).await?;
+            let block = DirectBlock::create(global.clone(), data[(start-slice_offset)..].to_vec(), start).await?;
             let range = block.range(global.clone()).await?;
             start = range.end;
             blocks.push(block.to_enum());
         }
         // if there is still data left, we create a stored block
         if start < end {
-            let slice = data[start..end].to_vec();
+            let slice = data[start..].to_vec();
             let block = StoredBlock::create(global, slice, start).await?;
             blocks.push(block.to_enum());
         }

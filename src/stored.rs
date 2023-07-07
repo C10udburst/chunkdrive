@@ -18,7 +18,8 @@ pub struct Stored {
 
 impl Stored {
     pub async fn get<T: Deserialize<'static>>(&self, global: Arc<Global>) -> Result<T, String> {
-        let mut stream = self.data.get(global, 0..0);
+        let range = self.data.range(global.clone()).await?;
+        let mut stream = self.data.get(global, range);
         let mut data = Vec::new();
         while let Some(chunk) = stream.next().await {
             data.extend(chunk?);
@@ -31,7 +32,8 @@ impl Stored {
         let mut serializer = Serializer::new(Vec::new());
         data.serialize(&mut serializer).unwrap();
         let data = serializer.into_inner();
-        self.data.put(global, data, 0..0).await?;
+        let range = 0..data.len();
+        self.data.put(global, data, range).await?;
         Ok(())
     }
 

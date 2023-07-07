@@ -24,7 +24,7 @@ struct MessageAttachment {
 #[async_trait]
 impl Source for DiscordWebhook {
     fn max_size(&self) -> usize {
-        1024 * 1024 * 23
+        1024 * 1024 * 24
     }
 
     async fn get(&self, descriptor: &String) -> Result<Vec<u8>, String> {
