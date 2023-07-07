@@ -13,7 +13,7 @@ mod sources;
 mod stored;
 
 #[cfg(test)]
-mod tests; // test utils and more tests
+mod tests; // this is only included when running tests
 /* #endregion */
 
 // these will be checked if CD_CONFIG_PATH is not set

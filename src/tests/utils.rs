@@ -1,5 +1,6 @@
 use std::env;
 
+// This function is used to create a temporary config file for testing purposes
 pub fn make_temp_config(encryption: bool, size: usize) -> String {
     if encryption {
         return format!(r#"
