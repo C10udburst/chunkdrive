@@ -51,8 +51,6 @@ impl Bucket {
 
 #[cfg(test)]
 mod bucket_tests {
-    use std::env;
-
     use serde_yaml::from_str;
     use tokio::runtime::Runtime;
 
@@ -61,7 +59,7 @@ mod bucket_tests {
 
     #[test]
     fn bucket_test1() {
-        let cfg = make_temp_config(false);
+        let cfg = make_temp_config(false, 25);
         let global = from_str::<Global>(&cfg).unwrap();
 
         let data = vec![1u8, 2, 3, 4, 5].repeat(5);
@@ -84,7 +82,7 @@ mod bucket_tests {
 
     #[test]
     fn bucket_test2() {
-        let cfg = make_temp_config(true);
+        let cfg = make_temp_config(true, 25);
         let global = from_str::<Global>(&cfg).unwrap();
 
         let data = vec![1u8, 2, 3, 4, 5].repeat(5);

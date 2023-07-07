@@ -1,6 +1,6 @@
 use std::env;
 
-pub fn make_temp_config(encryption: bool) -> String {
+pub fn make_temp_config(encryption: bool, size: usize) -> String {
     if encryption {
         return format!(r#"
 buckets:
@@ -8,11 +8,11 @@ buckets:
         source:
             type: local
             folder: {}
-            max_size: 25
+            max_size: {}
         encryption:
             type: aes
             key: "12345678901234567890123456789012"
-        "#, env::temp_dir().display());
+        "#, env::temp_dir().display(), size);
     } else {
         return format!(r#"
 buckets:
@@ -20,7 +20,7 @@ buckets:
         source:
             type: local
             folder: {}
-            max_size: 25
-        "#, env::temp_dir().display());
+            max_size: {}
+        "#, env::temp_dir().display(), size);
     }
 }

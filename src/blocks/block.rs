@@ -79,7 +79,7 @@ impl Block for BlockType {
 
 #[cfg(test)]
 mod block_tests {
-    use std::{ops::Range, sync::Arc};
+    use std::sync::Arc;
     use futures::StreamExt;
     use serde_yaml::from_str;
 
@@ -87,7 +87,7 @@ mod block_tests {
 
     #[tokio::test]
     async fn test_block() {
-        let global = Arc::new(from_str::<Global>(&make_temp_config(false)).unwrap());
+        let global = Arc::new(from_str::<Global>(&make_temp_config(false, 1024*25)).unwrap());
         dbg!(&global);
         let data = vec![0, 1, 2, 3, 4, 5, 6, 7].repeat(1000);
         let range = 0..data.len();

@@ -3,7 +3,7 @@
     It does not split the data into chunks.
  */
 
-use std::{ops::Range, sync::Arc};
+use std::{ops::Range, sync::Arc, vec};
 use async_trait::async_trait;
 use futures::stream::BoxStream;
 use serde::{Serialize, Deserialize};
@@ -54,7 +54,7 @@ impl Block for DirectBlock {
                     }
                 };
                 md5.reset();
-                let mut hash = Vec::new();
+                let mut hash = vec![0; 16];
                 md5.input(&data);
                 md5.result(&mut hash);
                 if hash != self.hash {
@@ -106,7 +106,7 @@ impl Block for DirectBlock {
         }
 
         // hash
-        let mut hash = Vec::new();
+        let mut hash = vec![0; 16];
         let mut md5 = Md5::new();
         md5.input(&data);
         md5.result(&mut hash);
@@ -143,9 +143,12 @@ impl Block for DirectBlock {
 
         // slice the data
         let data = data[..base_bucket.max_size()].to_vec();
+        if data.len() == 0 {
+            return Err("Data is empty".to_string())
+        }
 
         // hashing the data
-        let mut hash = Vec::new();
+        let mut hash = vec![0; 16];
         let mut md5 = Md5::new();
         md5.input(&data);
         md5.result(&mut hash);
