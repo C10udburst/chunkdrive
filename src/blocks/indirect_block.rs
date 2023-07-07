@@ -43,13 +43,13 @@ impl Block for IndirectBlock {
     }
 
     async fn put(&mut self, global: Arc<Global>, data: Vec<u8>, range: Range<usize>) -> Result<(), String> {
-        let mut start = range.start;
+        let start = range.start;
         
         for block in self.blocks.iter_mut() {
             let block_range = block.range(global.clone()).await?;
             if block_range.end <= start { break; }
-            let offet_range = start..(start + data.len());
-            let slice = data.get(offet_range.clone()).unwrap().to_vec();
+            let offset_range = start..(start + data.len());
+            let slice = data.get(offset_range.clone()).unwrap().to_vec();
             block.put(global.clone(), slice, block_range).await?;
         }
 

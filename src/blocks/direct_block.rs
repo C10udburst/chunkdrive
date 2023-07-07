@@ -81,7 +81,7 @@ impl Block for DirectBlock {
     }
 
     // indirect blocks ensure that the data.length == range.length && data[0] corresponds to range.start
-    async fn put(&mut self, global: Arc<Global>, data: Vec<u8>, range: Range<usize>) -> Result<(), String> {
+    async fn put(&mut self, global: Arc<Global>, data: Vec<u8>, _range: Range<usize>) -> Result<(), String> {
         // put the data
         let mut failed_count = 0;
         for (bucket_name, descriptor) in self.sources.iter() {
@@ -137,10 +137,7 @@ impl Block for DirectBlock {
             None => return Err("No buckets available".to_string())
         };
         for _ in 0..global.redundancy {
-            let bucket = global.random_bucket_sized(base_bucket.max_size()).ok_or("No buckets available".to_string())?;
-            if buckets.contains(&bucket) {
-                continue
-            }
+            let bucket = global.next_bucket(base_bucket.max_size(), &buckets).ok_or(format!("Not enough buckets available ({} needed)", global.redundancy))?;
             buckets.push(bucket);
         }
 
@@ -221,7 +218,7 @@ impl Block for DirectBlock {
         }))
     }
 
-    async fn repair(&self, global: Arc<Global>, range: Range<usize>) -> Result<(), String> {
+    async fn repair(&self, _global: Arc<Global>, _range: Range<usize>) -> Result<(), String> {
         Err("Not implemented".to_string())
     }
 

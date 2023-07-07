@@ -23,10 +23,11 @@ impl Global {
         self.buckets.get(name)
     }
     
-    pub fn random_bucket_sized(&self, max_size: usize) -> Option<&String> {
+    pub fn next_bucket(&self, max_size: usize, exclude: &Vec<&String>) -> Option<&String> {
         self.buckets
             .iter()
             .filter(|(_, bucket)| bucket.max_size() >= max_size)
+            .filter(|(bucket, _)| !exclude.contains(bucket))
             .choose(&mut rand::thread_rng())
             .map(|(bucket, _)| bucket)
     }

@@ -47,3 +47,86 @@ impl Bucket {
         self.source.create().await
     }
 }
+
+
+#[cfg(test)]
+mod bucket_tests {
+    use std::env;
+
+    use serde_yaml::from_str;
+    use tokio::runtime::Runtime;
+
+    use crate::global::Global;
+    
+    // generate a temporary config file
+    fn make_temp_config(encryption: bool) -> String {
+        if encryption {
+            return format!(r#"
+buckets:
+    local1:
+        source:
+            type: local
+            folder: {}
+            max_size: 25
+        encryption:
+            type: aes
+            key: "12345678901234567890123456789012"
+            "#, env::temp_dir().display());
+        } else {
+            return format!(r#"
+buckets:
+    local2:
+        source:
+            type: local
+            folder: {}
+            max_size: 25
+            "#, env::temp_dir().display());
+        }
+    }
+
+    #[test]
+    fn bucket_test1() {
+        let cfg = make_temp_config(false);
+        let global = from_str::<Global>(&cfg).unwrap();
+
+        let data = vec![1u8, 2, 3, 4, 5].repeat(5);
+        let bucket = global.get_bucket(global.random_bucket().unwrap().as_str()).unwrap();
+        
+        let rt = Runtime::new().unwrap();
+        rt.block_on(async {
+            let data_clone = data.clone();
+            let descriptor = bucket.create().await.unwrap();
+            bucket.put(&descriptor, data_clone).await.unwrap();
+            let data2 = bucket.get(&descriptor).await.unwrap();
+            assert_eq!(data, data2);
+            bucket.delete(&descriptor).await.unwrap();
+            match bucket.get(&descriptor).await {
+                Ok(_) => panic!("Descriptor should not exist"),
+                Err(_) => (),
+            }
+        });
+    }
+
+    #[test]
+    fn bucket_test2() {
+        let cfg = make_temp_config(true);
+        let global = from_str::<Global>(&cfg).unwrap();
+
+        let data = vec![1u8, 2, 3, 4, 5].repeat(5);
+        let bucket = global.get_bucket(global.random_bucket().unwrap().as_str()).unwrap();
+        
+        let rt = Runtime::new().unwrap();
+        rt.block_on(async {
+            let data_clone = data.clone();
+            let descriptor = bucket.create().await.unwrap();
+            bucket.put(&descriptor, data_clone).await.unwrap();
+            let data2 = bucket.get(&descriptor).await.unwrap();
+            assert_eq!(data, data2);
+            bucket.delete(&descriptor).await.unwrap();
+            match bucket.get(&descriptor).await {
+                Ok(_) => panic!("Descriptor should not exist"),
+                Err(_) => (),
+            }
+        });
+    }
+}

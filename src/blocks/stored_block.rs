@@ -39,7 +39,8 @@ impl Block for StoredBlock {
     }
 
     async fn delete(&self, global: Arc<Global>) {
-        self.stored.get::<BlockType>(global.clone()).await.unwrap().delete(global).await
+        self.stored.get::<BlockType>(global.clone()).await.unwrap().delete(global.clone()).await;
+        self.stored.delete(global).await
     }
 
     async fn create(global: Arc<Global>, data: Vec<u8>, start: usize) -> Result<BlockType, String> {
