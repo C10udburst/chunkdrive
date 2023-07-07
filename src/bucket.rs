@@ -1,5 +1,6 @@
 /*
     Bucket is an abstraction over a source, it includes additional features like encryption or caching.
+    Each bucket has a maximum size, which is the maximum size of a single data chunk that can be stored in the bucket.
 */
 
 use serde::Deserialize;
@@ -22,7 +23,7 @@ impl Bucket {
     }
 
     // Takes a descriptor and returns a stream of data or an error (String)
-    pub async fn get(&self, descriptor: String) -> Result<Vec<u8>, String> {
+    pub async fn get(&self, descriptor: &String) -> Result<Vec<u8>, String> {
         let iv = descriptor.as_bytes().to_vec();
         let data = self.source.get(descriptor).await?;
         let decrypted = self.encryption.decrypt(data, iv)?;
@@ -30,14 +31,14 @@ impl Bucket {
     }
     
     // Takes a descriptor and data and uploads the data to the descriptor or returns an error (String)
-    pub async fn put(&self, descriptor: String, data: Vec<u8>) -> Result<(), String> {
+    pub async fn put(&self, descriptor: &String, data: Vec<u8>) -> Result<(), String> {
         let iv = descriptor.as_bytes().to_vec();
         let encrypted = self.encryption.encrypt(data, iv)?;
         self.source.put(descriptor, encrypted).await
     }
     
     // Takes a descriptor and deletes the data at the descriptor or returns an error (String)
-    pub async fn delete(&self, descriptor: String) -> Result<(), String> {
+    pub async fn delete(&self, descriptor: &String) -> Result<(), String> {
         self.source.delete(descriptor).await
     }
 

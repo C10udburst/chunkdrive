@@ -27,7 +27,7 @@ impl Source for DiscordWebhook {
         1024 * 1024 * 23
     }
 
-    async fn get(&self, descriptor: String) -> Result<Vec<u8>, String> {
+    async fn get(&self, descriptor: &String) -> Result<Vec<u8>, String> {
         let url = format!("{}/{}", self.url, descriptor);
         let client = reqwest::Client::new();
         let response = client
@@ -48,7 +48,7 @@ impl Source for DiscordWebhook {
         }
     }
 
-    async fn put(&self, descriptor: String, data: Vec<u8>) -> Result<(), String> {
+    async fn put(&self, descriptor: &String, data: Vec<u8>) -> Result<(), String> {
         let url = format!("{}/{}", self.url, descriptor);
         let client = reqwest::Client::new();
         let data_part = reqwest::multipart::Part::bytes(data)
@@ -65,7 +65,7 @@ impl Source for DiscordWebhook {
         Ok(())
     }
 
-    async fn delete(&self, descriptor: String) -> Result<(), String> {
+    async fn delete(&self, descriptor: &String) -> Result<(), String> {
         let url = format!("{}/{}", self.url, descriptor);
         let client = reqwest::Client::new();
         client

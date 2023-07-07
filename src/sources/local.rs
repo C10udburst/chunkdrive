@@ -23,7 +23,7 @@ impl Source for LocalSource {
         self.max_size
     }
 
-    async fn get(&self, descriptor: String) -> Result<Vec<u8>, String> {
+    async fn get(&self, descriptor: &String) -> Result<Vec<u8>, String> {
         let file_path = format!("{}/{}", self.folder, descriptor);
         let file = match File::open(file_path).await {
             Ok(file) => file,
@@ -35,7 +35,7 @@ impl Source for LocalSource {
         Ok(data)
     }
 
-    async fn put(&self, descriptor: String, data: Vec<u8>) -> Result<(), String> {
+    async fn put(&self, descriptor: &String, data: Vec<u8>) -> Result<(), String> {
         let file_path = format!("{}/{}", self.folder, descriptor);
         let mut file = match OpenOptions::new()
             .write(true)
@@ -51,7 +51,7 @@ impl Source for LocalSource {
         Ok(())
     }
 
-    async fn delete(&self, descriptor: String) -> Result<(), String> {
+    async fn delete(&self, descriptor: &String) -> Result<(), String> {
         let file_path = format!("{}/{}", self.folder, descriptor);
         match remove_file(file_path).await {
             Ok(_) => Ok(()),

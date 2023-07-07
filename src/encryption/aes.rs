@@ -156,8 +156,6 @@ impl Encryption for Aes {
 
 #[cfg(test)]
 mod aes_tests {
-    use crate::encryption;
-
     use super::*;
 
     #[test]

@@ -6,9 +6,9 @@ use super::{local::LocalSource, discord_webhook::DiscordWebhook};
 #[async_trait]
 pub trait Source {
     fn max_size(&self) -> usize;
-    async fn get(&self, descriptor: String) -> Result<Vec<u8>, String>;
-    async fn put(&self, descriptor: String, data: Vec<u8>) -> Result<(), String>;
-    async fn delete(&self, descriptor: String) -> Result<(), String>;
+    async fn get(&self, descriptor: &String) -> Result<Vec<u8>, String>;
+    async fn put(&self, descriptor: &String, data: Vec<u8>) -> Result<(), String>;
+    async fn delete(&self, descriptor: &String) -> Result<(), String>;
     async fn create(&self) -> Result<String, String>;
 }
 
@@ -37,15 +37,15 @@ impl Source for SourceType {
         match_method!(self, max_size, )
     }
 
-    async fn get(&self, descriptor: String) -> Result<Vec<u8>, String> {
+    async fn get(&self, descriptor: &String) -> Result<Vec<u8>, String> {
         match_method!(self, get, descriptor).await
     }
 
-    async fn put(&self, descriptor: String, data: Vec<u8>) -> Result<(), String> {
+    async fn put(&self, descriptor: &String, data: Vec<u8>) -> Result<(), String> {
         match_method!(self, put, descriptor, data).await
     }
 
-    async fn delete(&self, descriptor: String) -> Result<(), String> {
+    async fn delete(&self, descriptor: &String) -> Result<(), String> {
         match_method!(self, delete, descriptor).await
     }
 

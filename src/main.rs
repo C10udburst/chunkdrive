@@ -1,12 +1,16 @@
-use std::path::Path;
-use std::env::var;
 use global::Global;
 use serde_yaml::from_reader;
+use std::env::var;
+use std::path::Path;
 
+/* #region Modules */
+mod blocks;
 mod bucket;
 mod encryption;
 mod global;
 mod sources;
+mod stored;
+/* #endregion */
 
 // these will be checked if CD_CONFIG_PATH is not set
 const CONFIG_PATHS: [&str; 2] = ["./config.yml", "/etc/chunkdrive/config.yml"];
