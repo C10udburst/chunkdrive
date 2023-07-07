@@ -10,6 +10,9 @@ mod encryption;
 mod global;
 mod sources;
 mod stored;
+
+#[cfg(test)]
+mod tests; // test utils and more tests
 /* #endregion */
 
 // these will be checked if CD_CONFIG_PATH is not set

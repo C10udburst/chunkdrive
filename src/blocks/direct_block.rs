@@ -136,7 +136,7 @@ impl Block for DirectBlock {
             Some(bucket) => bucket,
             None => return Err("No buckets available".to_string())
         };
-        for _ in 0..global.redundancy {
+        for _ in 1..global.redundancy {
             let bucket = global.next_bucket(base_bucket.max_size(), &buckets).ok_or(format!("Not enough buckets available ({} needed)", global.redundancy))?;
             buckets.push(bucket);
         }
