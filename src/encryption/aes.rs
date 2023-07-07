@@ -56,6 +56,15 @@ impl AesType {
             AesType::Aes256 => 32,
         }
     }
+
+    fn block_size(&self) -> usize {
+        match self {
+            AesType::Aes128 => 16,
+            AesType::Aes192 => 24,
+            AesType::Aes256 => 32,
+        }
+    }
+
 }
 /* #endregion */
 
@@ -73,6 +82,11 @@ fn to_size(init_key: &Vec<u8>, size: usize) -> Vec<u8> {
 }
 
 impl Encryption for Aes {
+    fn max_size(&self, source_size: usize) -> usize {
+        // how many full blocks fit into the source size
+        return (source_size / self.size.block_size()) * self.size.block_size();
+    }
+
     fn encrypt(&self, data: Vec<u8>, iv: Vec<u8>) -> Result<Vec<u8>, String> {
         let mut encryptor = aes::cbc_encryptor(
             self.size.to_enum(),

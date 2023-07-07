@@ -3,6 +3,7 @@ use serde::Deserialize;
 use super::{aes::Aes, none::None};
 
 pub trait Encryption {
+    fn max_size(&self, source_size: usize) -> usize;
     fn encrypt(&self, data: Vec<u8>, iv: Vec<u8>) -> Result<Vec<u8>, String>;
     fn decrypt(&self, data: Vec<u8>, iv: Vec<u8>) -> Result<Vec<u8>, String>;
 }
@@ -31,6 +32,10 @@ macro_rules! match_method {
 }
 
 impl Encryption for EncryptionType {
+    fn max_size(&self, source_size: usize) -> usize {
+        match_method!(self, max_size, source_size)
+    }
+
     fn encrypt<'a>(&self, data: Vec<u8>, iv: Vec<u8>) -> Result<Vec<u8>, String> {
         match_method!(self, encrypt, data, iv)
     }

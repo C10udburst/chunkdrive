@@ -10,6 +10,7 @@ async-stream = "0.3.5"
 async-trait = "0.1.71"
 futures = "0.3.28"
 rand = "0.8.5"
+reqwest = {version = "0.11.18", features = ["json", "multipart"]}
 rust-crypto = "0.2.36"
 serde =  { version = "1.0.166", features = ["derive"] }
 serde_yaml = "0.9.22"

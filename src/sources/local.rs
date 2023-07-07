@@ -9,10 +9,20 @@ use super::source::Source;
 #[derive(Debug, Deserialize)]
 pub struct LocalSource {
     folder: String,
+    #[serde(default = "default_max_size")]
+    max_size: usize,
+}
+
+const fn default_max_size() -> usize {
+    1024 * 1024 * 1024
 }
 
 #[async_trait]
 impl Source for LocalSource {
+    fn max_size(&self) -> usize {
+        self.max_size
+    }
+
     async fn get(&self, descriptor: String) -> Result<Vec<u8>, String> {
         let file_path = format!("{}/{}", self.folder, descriptor);
         let file = match File::open(file_path).await {
