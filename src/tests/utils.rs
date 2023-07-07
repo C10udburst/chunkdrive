@@ -10,6 +10,7 @@ buckets:
             type: local
             folder: {}
             max_size: {}
+            descriptor_length: 3  # just in case we set extremely small block size for testing
         encryption:
             type: aes
             key: "12345678901234567890123456789012"
@@ -22,6 +23,7 @@ buckets:
             type: local
             folder: {}
             max_size: {}
+            descriptor_length: 3  # just in case we set extremely small block size for testing
         "#, env::temp_dir().display(), size);
     }
 }

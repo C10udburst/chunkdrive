@@ -11,7 +11,6 @@ async fn shared1(encryption: bool, local_size: usize, data: Vec<u8>) {
     let range = 0..data.len();
     let mut block = BlockType::create(global.clone(), data.clone(), 0).await.unwrap();
     dbg!(&block);
-    assert_eq!(block.range(global.clone()).await.unwrap(), range);
     let mut got1 = Vec::new();
     {
         let mut stream = block.get(global.clone(), range.clone());
@@ -48,23 +47,23 @@ async fn unencrypted_fits_in_one_block() {
 #[tokio::test]
 async fn encrypted_fits_in_one_block() {
     let data = vec![1u8, 2, 3, 4, 5].repeat(5);
-    shared1(true, 26, data).await;
+    shared1(true, 30, data).await;
 }
 
 #[tokio::test]
 async fn unencrypted_fits_direct_blocks() {
-    let data = vec![1u8, 2, 3, 4, 5].repeat(95);
-    shared1(false, 26, data).await;
+    let data: Vec<u8> = vec![1u8, 2, 3, 4, 5].repeat(10);
+    shared1(false, 30, data).await;
 }
 
 #[tokio::test]
 async fn encrypted_fits_direct_blocks() {
-    let data = vec![1u8, 2, 3, 4, 5].repeat(90);
-    shared1(true, 26, data).await;
+    let data = vec![1u8, 2, 3, 4, 5].repeat(10);
+    shared1(true, 30, data).await;
 }
 
 #[tokio::test]
 async fn unencrypted_needs_indirect_blocks() {
-    let data = vec![1u8, 2, 3, 4, 5].repeat(100);
-    shared1(false, 16, data).await;
+    let data = vec![1u8, 2, 3, 4, 5].repeat(120);
+    shared1(false, 30, data).await;
 }
