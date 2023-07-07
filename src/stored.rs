@@ -25,12 +25,12 @@ impl Stored {
             data.extend(chunk?);
         }
         let mut deserializer = Deserializer::new(&data[..]);
-        Ok(Deserialize::deserialize(&mut deserializer).unwrap())
+        Ok(Deserialize::deserialize(&mut deserializer).map_err(|e| e.to_string())?)
     }
 
     pub async fn put<T: Serialize>(&mut self, global: Arc<Global>, data: T) -> Result<(), String> {
         let mut serializer = Serializer::new(Vec::new());
-        data.serialize(&mut serializer).unwrap();
+        data.serialize(&mut serializer).map_err(|e| e.to_string())?;
         let data = serializer.into_inner();
         let range = 0..data.len();
         self.data.put(global, data, range).await?;
@@ -39,7 +39,7 @@ impl Stored {
 
     pub async fn create<T: Serialize>(global: Arc<Global>, data: T) -> Result<Stored, String> {
         let mut serializer = Serializer::new(Vec::new());
-        data.serialize(&mut serializer).unwrap();
+        data.serialize(&mut serializer).map_err(|e| e.to_string())?;
         let data = serializer.into_inner();
         let block = match IndirectBlock::create(global.clone(), data, 0).await? {
             BlockType::Indirect(block) => block,

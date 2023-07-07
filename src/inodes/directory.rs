@@ -55,10 +55,7 @@ impl Directory {
     }
 
     pub fn unlink(&mut self, name: &String) -> Result<Stored, String> {
-        if !self.children.contains_key(name) {
-            return Err(format!("File {} does not exist", name));
-        }
-
-        Ok(self.children.remove(name).unwrap())
+        self.children.remove(name)
+            .ok_or(format!("File {} does not exist", name))
     }
 }

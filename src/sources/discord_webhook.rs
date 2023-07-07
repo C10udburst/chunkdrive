@@ -43,7 +43,8 @@ impl Source for DiscordWebhook {
             return Err("No attachments found".to_string());
         }
         match client.get(&parsed.attachments[0].url).send().await {
-            Ok(response) => Ok(response.bytes().await.map_err(|e| format!("Error reading response: {}", e))?.to_vec()),
+            Ok(response) => Ok(response.bytes().await
+                .map_err(|e| format!("Error reading response: {}", e))?.to_vec()),
             Err(e) => Err(format!("Error sending request: {}", e))
         }
     }
@@ -54,7 +55,7 @@ impl Source for DiscordWebhook {
         let data_part = reqwest::multipart::Part::bytes(data)
             .file_name("d")
             .mime_str("application/octet-stream")
-            .unwrap();
+            .map_err(|e| format!("Error creating part: {}", e))?;
         let form = reqwest::multipart::Form::new().part("d", data_part);
         client
             .post(&url)
@@ -81,7 +82,7 @@ impl Source for DiscordWebhook {
         let empty = reqwest::multipart::Part::bytes(Vec::new())
             .file_name("d")
             .mime_str("application/octet-stream")
-            .unwrap();
+            .map_err(|e| format!("Error creating part: {}", e))?;
         let form = reqwest::multipart::Form::new().part("d", empty);
         let response = client
             .post(&self.url)

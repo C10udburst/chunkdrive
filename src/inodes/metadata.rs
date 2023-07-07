@@ -73,11 +73,11 @@ impl Metadata {
         Self {
             created: SystemTime::now()
                 .duration_since(UNIX_EPOCH)
-                .unwrap()
+                .unwrap_or_default()
                 .as_secs(),
             modified: SystemTime::now()
                 .duration_since(UNIX_EPOCH)
-                .unwrap()
+                .unwrap_or_default()
                 .as_secs(),
             size: Size::Empty,
         }
@@ -86,7 +86,7 @@ impl Metadata {
     pub fn touch(&mut self) {
         self.modified = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .unwrap_or_default()
             .as_secs();
     }
 

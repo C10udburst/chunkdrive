@@ -48,7 +48,13 @@ impl Global {
         match std::fs::File::open(&self.root_path) {
             Ok(file) => {
                 let mut de = Deserializer::new(&file);
-                Deserialize::deserialize(&mut de).unwrap()
+                match Deserialize::deserialize(&mut de) {
+                    Ok(root) => root,
+                    Err(_) => {
+                        std::fs::remove_file(&self.root_path).unwrap();
+                        Directory::new()
+                    }
+                }
             },
             Err(_) => {
                 Directory::new()

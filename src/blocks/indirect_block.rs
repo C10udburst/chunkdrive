@@ -22,7 +22,7 @@ impl Block for IndirectBlock {
         };
         let last = match self.blocks.last() {
             Some(block) => block,
-            None => panic!("This should never happen"),
+            None => return Ok(0..0),
         };
 
         let first_range = first.range(global.clone()).await?;
@@ -51,12 +51,15 @@ impl Block for IndirectBlock {
         for block in self.blocks.iter_mut() {
             let block_range = block.range(global.clone()).await?;
             if block_range.end <= start { break; }
-            let slice = data[(start-start_offset)..block_range.end].to_vec();
-            block.put(global.clone(), slice, block_range.clone()).await?;
-            start = block_range.end;
+            let slice_range = block_range.start - start_offset..block_range.end - start_offset;
+            let slice = data[slice_range].to_vec();
+            block.put(global.clone(), slice, block_range).await?;
         }
 
-        start = self.blocks.last().unwrap().range(global.clone()).await?.end;
+        start = match self.blocks.last() {
+            Some(block) => block.range(global.clone()).await?.end,
+            None => range.start
+        };
 
         // if data is left, we create new blocks just like we did in the create function
         while start < range.end && self.blocks.len() < global.direct_block_count {
@@ -81,10 +84,12 @@ impl Block for IndirectBlock {
     }
 
     async fn create(global: Arc<Global>, data: Vec<u8>, start: usize) -> Result<BlockType, String> {
-        let mut blocks = Vec::new();
+
+        let mut blocks = Vec::new(); // we will make sure that these are in order
         let slice_offset = start;
         let mut start = start;
         let end = start + data.len();
+
         while start < end && blocks.len() < global.direct_block_count {
             let block = DirectBlock::create(global.clone(), data[(start-slice_offset)..].to_vec(), start).await?;
             let range = block.range(global.clone()).await?;
