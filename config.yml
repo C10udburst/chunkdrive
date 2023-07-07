@@ -1,0 +1,7 @@
+buckets:
+  local1:
+    source:
+      type: local
+      folder: ./test
+    encryption:
+      type: none

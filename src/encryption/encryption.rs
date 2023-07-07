@@ -1,23 +1,41 @@
 use serde::Deserialize;
-use futures::stream::BoxStream;
-use bytes::Bytes;
+
+use super::{aes::Aes, none::None};
 
 pub trait Encryption {
-    // Takes a stream of data and returns a stream of encrypted data or an error (String)
-    fn encrypt(&self, data: BoxStream<Result<Bytes, String>>) -> BoxStream<Result<Bytes, String>>;
-    // Takes a stream of encrypted data and returns a stream of decrypted data or an error (String)
-    fn decrypt(&self, data: BoxStream<Result<Bytes, String>>) -> BoxStream<Result<Bytes, String>>;
+    fn encrypt(&self, data: Vec<u8>, iv: Vec<u8>) -> Result<Vec<u8>, String>;
+    fn decrypt(&self, data: Vec<u8>, iv: Vec<u8>) -> Result<Vec<u8>, String>;
 }
 
 #[derive(Deserialize, Debug)]
 #[serde(tag = "type")]
 pub enum EncryptionType {
     #[serde(rename = "none")]
-    None,
+    None(None),
+    #[serde(rename = "aes")]
+    Aes(Aes)
 }
 
 impl Default for EncryptionType {
-    fn default() -> Self {
-        EncryptionType::None
+    fn default() -> Self { EncryptionType::None(None) }
+}
+
+// This macro removes the need to write out the match statement for each method in the enum
+macro_rules! match_method {
+    ($self:ident, $method:ident, $($arg:expr),*) => {
+        match $self {
+            EncryptionType::None(encryption) => encryption.$method($($arg),*),
+            EncryptionType::Aes(encryption) => encryption.$method($($arg),*)
+        }
+    };
+}
+
+impl Encryption for EncryptionType {
+    fn encrypt<'a>(&self, data: Vec<u8>, iv: Vec<u8>) -> Result<Vec<u8>, String> {
+        match_method!(self, encrypt, data, iv)
+    }
+
+    fn decrypt<'a>(&self, data: Vec<u8>, iv: Vec<u8>) -> Result<Vec<u8>, String> {
+        match_method!(self, decrypt, data, iv)
     }
 }

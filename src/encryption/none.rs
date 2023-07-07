@@ -1,6 +1,4 @@
 use serde::Deserialize;
-use futures::stream::BoxStream;
-use bytes::Bytes;
 
 use super::encryption::Encryption;
 
@@ -8,11 +6,11 @@ use super::encryption::Encryption;
 pub struct None;
 
 impl Encryption for None {
-    fn encrypt(&self, data: BoxStream<Result<Bytes, String>>) -> BoxStream<Result<Bytes, String>> {
-        data
+    fn encrypt(&self, data: Vec<u8>, _iv: Vec<u8>) -> Result<Vec<u8>, String> {
+        Ok(data)
     }
 
-    fn decrypt(&self, data: BoxStream<Result<Bytes, String>>) -> BoxStream<Result<Bytes, String>> {
-        data
+    fn decrypt<'a>(&self, data: Vec<u8>, _iv: Vec<u8>) -> Result<Vec<u8>, String> {
+        Ok(data)
     }
 }
