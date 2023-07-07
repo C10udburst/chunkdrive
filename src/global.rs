@@ -4,7 +4,7 @@ use rand::seq::IteratorRandom;
 use serde::{Deserialize, Serialize};
 use rmp_serde::{Deserializer, Serializer};
 
-use crate::{bucket::Bucket, inodes::directory::Directory};
+use crate::{bucket::Bucket, inodes::directory::Directory, stored::Stored};
 
 #[derive(Deserialize, Debug)]
 pub struct Global {
@@ -16,7 +16,7 @@ pub struct Global {
     pub direct_block_count: usize,
     
     #[serde(default = "default_root_path")]
-    pub root_path: String,
+    root_path: String,
 }
 
 const fn default_redundancy() -> usize { 1 } // redundancy is disabled by default, so we set it to 1

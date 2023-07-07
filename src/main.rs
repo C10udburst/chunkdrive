@@ -1,7 +1,8 @@
 use global::Global;
 use serde_yaml::from_reader;
-use std::env::var;
+use std::env::{var, args};
 use std::path::Path;
+use std::sync::Arc;
 
 /* #region Modules */
 mod blocks;
@@ -10,6 +11,7 @@ mod encryption;
 mod global;
 mod inodes;
 mod sources;
+mod shell;
 mod stored;
 
 #[cfg(test)]
@@ -39,5 +41,8 @@ fn main() {
     ).unwrap();
     let global: Global = from_reader(file).unwrap();
 
-    println!("{:?}", global);
+    // if run with --shell, start the shell
+    if args().any(|arg| arg == "--shell") {
+        shell::shell(Arc::new(global));
+    }
 }

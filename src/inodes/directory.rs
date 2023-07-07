@@ -8,8 +8,15 @@ use super::{inode::{Inode, InodeType}, metadata::{Metadata, Size}};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Directory {
+    #[serde(rename = "c")]
+    #[serde(default, skip_serializing_if = "is_empty")]
     children: HashMap<String, Stored>,
+    #[serde(rename = "m")]
     pub metadata: Metadata
+}
+
+fn is_empty<T>(map: &HashMap<String, T>) -> bool {
+    map.is_empty()
 }
 
 #[async_trait]
@@ -33,14 +40,20 @@ impl Directory {
         }
     }
 
+    pub fn to_enum(self) -> InodeType {
+        InodeType::Directory(self)
+    }
+
     pub async fn add(&mut self, global: Arc<Global>, name: &String, inode: InodeType) -> Result<(), String> {
         if self.children.contains_key(name) {
             return Err(format!("File {} already exists", name));
         }
 
         let stored = Stored::create(global, inode).await?;
+        
         self.children.insert(name.clone(), stored);
         self.metadata.modified(Size::Entries(self.children.len()));
+
         Ok(())
     }
 
@@ -51,11 +64,21 @@ impl Directory {
 
         let stored = self.children.remove(name).unwrap();
         stored.delete(global).await;
+
         Ok(())
     }
 
     pub fn unlink(&mut self, name: &String) -> Result<Stored, String> {
         self.children.remove(name)
+            .ok_or(format!("File {} does not exist", name))
+    }
+
+    pub fn list(&self) -> Vec<String> {
+        self.children.keys().cloned().collect()
+    }
+
+    pub fn get(&self, name: &String) -> Result<&Stored, String> {
+        self.children.get(name)
             .ok_or(format!("File {} does not exist", name))
     }
 }

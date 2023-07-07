@@ -68,12 +68,14 @@ impl Block for IndirectBlock {
             start = range.end;
             self.blocks.push(block.to_enum());
         }
+
         // if there is still data left, we create a stored block
         if start < range.end {
             let slice = data[start-start_offset..].to_vec();
             let block = StoredBlock::create(global, slice, start).await?;
             self.blocks.push(block.to_enum());
         }
+        
         Ok(())
     }
 
@@ -90,12 +92,30 @@ impl Block for IndirectBlock {
         let mut start = start;
         let end = start + data.len();
 
+        let mut error: Option<String> = None;
         while start < end && blocks.len() < global.direct_block_count {
             let block = DirectBlock::create(global.clone(), data[(start-slice_offset)..].to_vec(), start).await?;
-            let range = block.range(global.clone()).await?;
+            let range = match block.range(global.clone()).await {
+                Ok(range) => range,
+                Err(err) => {
+                    error = Some(err);
+                    break;
+                }
+            };
             start = range.end;
             blocks.push(block.to_enum());
         }
+
+        // if we encountered an error, we delete all the blocks we created
+        if let Some(err) = error {
+            for block in blocks.iter() {
+                block.delete(global.clone()).await;
+            }
+
+            return Err(err);
+        }
+
+
         // if there is still data left, we create a stored block
         if start < end {
             let slice = data[start..].to_vec();
