@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
 use rand::seq::IteratorRandom;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
+use rmp_serde::{Deserializer, Serializer};
 
-use crate::bucket::Bucket;
+use crate::{bucket::Bucket, inodes::directory::Directory};
 
 #[derive(Deserialize, Debug)]
 pub struct Global {
@@ -13,10 +14,15 @@ pub struct Global {
     pub redundancy: usize,
     #[serde(default = "default_direct_block_count")]
     pub direct_block_count: usize,
+    
+    
+    #[serde(default = "default_root_path")]
+    pub root_path: String,
 }
 
-const fn default_redundancy() -> usize { 1 } // disabled by default
+const fn default_redundancy() -> usize { 1 } // redundancy is disabled by default, so we set it to 1
 const fn default_direct_block_count() -> usize { 10 }
+fn default_root_path() -> String { "./root.dat".to_string() }
 
 impl Global {
     pub fn get_bucket(&self, name: &str) -> Option<&Bucket> {
@@ -37,5 +43,22 @@ impl Global {
             .iter()
             .choose(&mut rand::thread_rng())
             .map(|(bucket, _)| bucket)
+    }
+    
+    pub fn get_root(&self) -> Directory {
+        match std::fs::File::open(&self.root_path) {
+            Ok(file) => {
+                let mut de = Deserializer::new(&file);
+                Deserialize::deserialize(&mut de).unwrap()
+            },
+            Err(_) => {
+                Directory::new()
+            }
+        }
+    }
+
+    pub fn save_root(&self, root: &Directory) {
+        let mut file = std::fs::File::create(&self.root_path).unwrap();
+        root.serialize(&mut Serializer::new(&mut file)).unwrap();
     }
 }

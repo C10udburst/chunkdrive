@@ -11,11 +11,12 @@ pub struct LocalSource {
     folder: String,
     #[serde(default = "default_max_size")]
     max_size: usize,
+    #[serde(default = "default_descriptor_length")]
+    descriptor_length: usize,
 }
 
-const fn default_max_size() -> usize {
-    1024 * 1024 * 1024
-}
+const fn default_max_size() -> usize { 1024 * 1024 * 1024 }
+const fn default_descriptor_length() -> usize { 24 }
 
 #[async_trait]
 impl Source for LocalSource {
@@ -62,7 +63,7 @@ impl Source for LocalSource {
     async fn create(&self) -> Result<String, String> {
         let mut descriptor = thread_rng()
             .sample_iter(&Alphanumeric)
-            .take(24)
+            .take(self.descriptor_length)
             .map(char::from)
             .collect::<String>();
         let mut file_path = format!("{}/{}", self.folder, descriptor);
@@ -70,7 +71,7 @@ impl Source for LocalSource {
         while File::open(file_path).await.is_ok() {
             descriptor = thread_rng()
                 .sample_iter(&Alphanumeric)
-                .take(24)
+                .take(self.descriptor_length)
                 .map(char::from)
                 .collect::<String>();
             file_path = format!("{}/{}", self.folder, descriptor);

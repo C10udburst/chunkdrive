@@ -8,6 +8,7 @@ mod blocks;
 mod bucket;
 mod encryption;
 mod global;
+mod inodes;
 mod sources;
 mod stored;
 
