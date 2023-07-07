@@ -23,7 +23,7 @@ pub trait Block {
     async fn delete(&self, global: Arc<Global>);
     async fn create(global: Arc<Global>, data: Vec<u8>, start: usize) -> Result<BlockType, String>;
     async fn repair(&self, global: Arc<Global>, range: Range<usize>) -> Result<(), String>;
-    fn into(self) -> BlockType;
+    fn to_enum(self) -> BlockType;
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -72,7 +72,7 @@ impl Block for BlockType {
         match_method!(self, repair, global, range).await
     }
 
-    fn into(self) -> BlockType {
+    fn to_enum(self) -> BlockType {
         self
     }
 }
@@ -87,11 +87,12 @@ mod block_tests {
 
     #[tokio::test]
     async fn test_block() {
-        let global = Arc::new(from_str::<Global>(&make_temp_config(false, 1024*25)).unwrap());
+        let global = Arc::new(from_str::<Global>(&make_temp_config(false, 1024)).unwrap());
         dbg!(&global);
-        let data = vec![0, 1, 2, 3, 4, 5, 6, 7].repeat(1000);
+        let data = vec![0, 1, 2, 3, 4, 5, 6, 7].repeat(512);
         let range = 0..data.len();
         let mut block = BlockType::create(global.clone(), data.clone(), 0).await.unwrap();
+        dbg!(&block);
         assert_eq!(block.range(global.clone()).await.unwrap(), range);
         let mut got1 = Vec::new();
         {
@@ -101,7 +102,7 @@ mod block_tests {
             }
             assert_eq!(got1, data);
         }
-        let data1 = vec![8, 9, 10, 11, 12, 13, 14, 15].repeat(999);
+        let data1 = vec![8, 9, 10, 11, 12, 13, 14, 15].repeat(512);
         let range1 = 0..data1.len();
         block.put(global.clone(), data1.clone(), range1.clone()).await.unwrap();
         let mut got2 = Vec::new();

@@ -35,6 +35,9 @@ impl Block for DirectBlock {
 
     fn get(&self, global: Arc<Global>, range: Range<usize>) -> BoxStream<Result<Vec<u8>, String>> {
         Box::pin(async_stream::stream! {
+            if range.end <= self.range.start || range.start >= self.range.end {
+                return // the range is outside of the block, so we return an empty stream
+            }
             let mut had_error = false;
             let mut found = false;
             let mut md5 = Md5::new();
@@ -63,13 +66,11 @@ impl Block for DirectBlock {
                 }
                 found = true;
 
-                // if the range is the same as the data, we can yield the data directly
-                if range.len() == data.len() {
-                    yield Ok(data);
-                } else {
-                    yield Ok(data[0..range.len()].to_vec());
-                }
-                
+                // calculate the data slice
+                let start = std::cmp::max(range.start, self.range.start) - self.range.start;
+                let end = std::cmp::min(range.end, self.range.end) - self.range.start;
+                let data = data[start..end].to_vec();
+                yield Ok(data);
             }
             if !found {
                 yield Err("Could not find the data".to_string());
@@ -142,7 +143,7 @@ impl Block for DirectBlock {
         }
 
         // slice the data
-        let data = data[..base_bucket.max_size()].to_vec();
+        let data = data[..std::cmp::min(data.len(), base_bucket.max_size())].to_vec();
         if data.len() == 0 {
             return Err("Data is empty".to_string())
         }
@@ -216,7 +217,7 @@ impl Block for DirectBlock {
 
         Ok(BlockType::Direct(DirectBlock {
             sources: descriptors,
-            range: start..start + base_bucket.max_size(),
+            range: start..start + data.len(),
             hash,
         }))
     }
@@ -225,7 +226,7 @@ impl Block for DirectBlock {
         Err("Not implemented".to_string())
     }
 
-    fn into(self) -> BlockType {
+    fn to_enum(self) -> BlockType {
         BlockType::Direct(self)
     }
 }

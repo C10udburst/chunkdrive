@@ -54,6 +54,19 @@ impl Block for IndirectBlock {
         }
 
         // if data is left, we create new blocks just like we did in the create function
+        let mut start: usize = start + data.len();
+        while start < range.end && self.blocks.len() < global.direct_block_count {
+            let block = DirectBlock::create(global.clone(), data.clone(), start).await?;
+            let range = block.range(global.clone()).await?;
+            start = range.end;
+            self.blocks.push(block.to_enum());
+        }
+        // if there is still data left, we create a stored block
+        if start < range.end {
+            let slice = data.get(start..range.end).unwrap().to_vec();
+            let block = StoredBlock::create(global, slice, start).await?;
+            self.blocks.push(block.to_enum());
+        }
         Ok(())
     }
 
@@ -71,9 +84,14 @@ impl Block for IndirectBlock {
             let block = DirectBlock::create(global.clone(), data.clone(), start).await?;
             let range = block.range(global.clone()).await?;
             start = range.end;
+            blocks.push(block.to_enum());
         }
         // if there is still data left, we create a stored block
-        blocks.push(StoredBlock::create(global.clone(), data, start).await?);
+        if start < end {
+            let slice = data.get(start..end).unwrap().to_vec();
+            let block = StoredBlock::create(global, slice, start).await?;
+            blocks.push(block.to_enum());
+        }
         Ok(BlockType::Indirect(IndirectBlock {
             blocks,
         }))
@@ -86,7 +104,7 @@ impl Block for IndirectBlock {
         Ok(())
     }
 
-    fn into(self) -> BlockType {
+    fn to_enum(self) -> BlockType {
         BlockType::Indirect(self)
     }
 

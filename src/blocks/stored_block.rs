@@ -55,7 +55,7 @@ impl Block for StoredBlock {
         self.stored.get::<BlockType>(global.clone()).await?.repair(global, range).await
     }
 
-    fn into(self) -> BlockType {
+    fn to_enum(self) -> BlockType {
         BlockType::Stored(self)
     }
 }
