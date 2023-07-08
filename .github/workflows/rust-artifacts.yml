@@ -12,28 +12,12 @@ jobs:
   build:
     strategy:
       matrix:
-        include:
-          - name: linux-amd64
-            os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            cross: false
-          
-          - name: linux-i686
-            os: ubuntu-latest
-            target: i686-unknown-linux-gnu
-            cross: false
-            
-            
-          - name: linux-aarch64
-            os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            cross: true
-
-          - name: linux-armv7
-            os: ubuntu-latest
-            target: armv7-unknown-linux-gnueabihf
-            cross: true
-    runs-on: ${{ matrix.os }}
+        target:
+          - x86_64-unknown-linux-gnu
+          - i686-unknown-linux-gnu
+          - aarch64-unknown-linux-gnu
+          - armv7-unknown-linux-gnueabihf
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Install Rust
@@ -41,20 +25,18 @@ jobs:
         with:
           toolchain: stable
           override: true
-      - name: Install rustup target
-        run: rustup target add ${{ matrix.target }}
-      - name: Install cross
-        if: matrix.cross
-        run: cargo install cross
-      - name: Build
-        if: "!matrix.cross"
-        run: cargo build --target ${{ matrix.target }} --release
-      - name: Build
-        if: matrix.cross
-        run: cross build --target ${{ matrix.target }} --release
+          target: ${{ matrix.target }}
+      - name: Install required packages
+        run: sudo apt-get install -y libssl-dev
+      - name: Build target
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: build
+          args: --release --target ${{ matrix.target }}
       - name: Archive
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.name }}
+          name: ${{ matrix.target }}
           path: target/${{ matrix.target }}/release/chunkdrive
           retention-days: 3
