@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{sync::Arc};
 
 use async_trait::async_trait;
 use futures::{StreamExt, stream::BoxStream};
@@ -20,8 +20,8 @@ impl Inode for File {
         &self.metadata
     }
 
-    async fn delete(&mut self, global: Arc<Global>) {
-        self.data.delete(global).await.ok(); // TODO: handle errors
+    async fn delete(&mut self, global: Arc<Global>) -> Result<(), String> {
+        self.data.delete(global).await
     }
 }
 

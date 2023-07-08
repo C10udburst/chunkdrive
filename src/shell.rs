@@ -2,6 +2,7 @@ use std::{sync::Arc, io::{Write, BufReader, Read}};
 
 use crate::{global::Global, inodes::{directory::Directory, inode::{InodeType, Inode}, metadata::Metadata, file::File}, stored::Stored};
 
+use futures::StreamExt;
 use tokio::runtime::Runtime;
 
 fn tokenize_line(line: &str) -> Vec<String> {
@@ -19,7 +20,7 @@ fn tokenize_line(line: &str) -> Vec<String> {
             escape = false;
         } else if c == '\\' {
             escape = true;
-        } else if c == '"' {
+        } else if c == '"' || c == '\'' || c == '`' {
             in_string = !in_string;
         } else if c == ' ' && !in_string {
             if !token.is_empty() {
@@ -41,6 +42,7 @@ pub fn shell(global: Arc<Global>) {
 
     let mut path: Vec<String> = Vec::new();
     let mut stored_cwd: Vec<Stored> = Vec::new();
+    let mut clipboard: Option<Stored> = None;
 
     loop {
         print!("\n/{}> ", match path.len() {
@@ -66,7 +68,7 @@ pub fn shell(global: Arc<Global>) {
 
         match COMMANDS.iter().find(|(name, _, _)| *name == command) {
             Some((_, func, _)) => {
-                match func(&global, args, &mut path, &mut stored_cwd) {
+                match func(&global, args, &mut path, &mut stored_cwd, &mut clipboard) {
                     Ok(_) => {},
                     Err(e) => {
                         if e == "SIGTERM" {
@@ -81,21 +83,24 @@ pub fn shell(global: Arc<Global>) {
     }
 }
 
-const COMMANDS: &[(&str, fn(&Arc<Global>, Vec<String>, &mut Vec<String>, &mut Vec<Stored>) -> Result<(), String>, &str)] = &[
+const COMMANDS: &[(&str, fn(&Arc<Global>, Vec<String>, &mut Vec<String>, &mut Vec<Stored>, &mut Option<Stored>) -> Result<(), String>, &str)] = &[
     ("help", help, "Prints this help message."),
+    ("exit", exit, "Exits the shell."),
     ("ls", ls, "Lists the contents of the current directory."),
     ("mkdir", mkdir, "Creates a new directory."),
     ("cd", cd, "Changes the current working directory."),
     ("rm", rm, "Removes a file or directory."),
+    ("cut", cut, "Cuts a file or directory."),
+    ("paste", paste, "Pastes a file or directory."),
     ("upload", upload, "Uploads a file to the drive"),
+    ("download", download, "Downloads a file from the drive."),
     ("stat", stat, "Prints metadata about a file or directory."),
     ("dbg", dbg, "Prints debug information about an object."),
-    ("root", |_, _, path, cwd| { path.clear(); cwd.clear(); Ok(()) }, "Returns to root directory"),
-    ("exit", |_, _, _, _| Err("SIGTERM".to_string()), "Exits the shell."),
-    ("cwd", |_, _, path, _| Ok(print!("/{}", path.join("/"))), "Prints the current working directory."),
+    ("root", |_, _, path, cwd, _| { path.clear(); cwd.clear(); Ok(()) }, "Returns to root directory"),
+    ("cwd", |_, _, path, _, _| Ok(print!("/{}", path.join("/"))), "Prints the current working directory."),
 ];
 
-fn help(_global: &Arc<Global>, _args: Vec<String>, _path: &mut Vec<String>, _cwd: &mut Vec<Stored>) -> Result<(), String> {
+fn help(_global: &Arc<Global>, _args: Vec<String>, _path: &mut Vec<String>, _cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
     print!("Commands:");
     for (name, _, description) in COMMANDS {
         print!("\n  {:<10} {}", name, description);
@@ -103,7 +108,7 @@ fn help(_global: &Arc<Global>, _args: Vec<String>, _path: &mut Vec<String>, _cwd
     Ok(())
 }
 
-fn dbg(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>) -> Result<(), String> {
+fn dbg(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
     if args.len() != 1 {
         return Err("Usage: dbg <global|.|<path>>".to_string());
     }
@@ -138,7 +143,7 @@ fn dbg(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &m
     }
 }
 
-fn ls(global: &Arc<Global>, _args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>) -> Result<(), String> {
+fn ls(global: &Arc<Global>, _args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
     let rt = Runtime::new().unwrap();
     let (dir, parent) = match cwd.last() {
         Some(cwd) => {
@@ -158,7 +163,7 @@ fn ls(global: &Arc<Global>, _args: Vec<String>, _path: &mut Vec<String>, cwd: &m
     Ok(())
 }
 
-fn mkdir(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>) -> Result<(), String> {
+fn mkdir(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
     if args.len() != 1 {
         return Err("Usage: mkdir <name>".to_string());
     }
@@ -189,7 +194,7 @@ fn mkdir(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: 
     Ok(())
 }
 
-fn cd(global: &Arc<Global>, args: Vec<String>, path: &mut Vec<String>, cwd: &mut Vec<Stored>) -> Result<(), String> {
+fn cd(global: &Arc<Global>, args: Vec<String>, path: &mut Vec<String>, cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
     if args.len() != 1 {
         return Err("Usage: cd <path>".to_string());
     }
@@ -228,7 +233,7 @@ fn cd(global: &Arc<Global>, args: Vec<String>, path: &mut Vec<String>, cwd: &mut
     Ok(())
 }
 
-fn rm(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>) -> Result<(), String> {
+fn rm(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
     if args.len() != 1 {
         return Err("Usage: rm <name>".to_string());
     }
@@ -257,6 +262,79 @@ fn rm(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mu
     Ok(())
 }
 
+fn cut(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>, clipboard: &mut Option<Stored>) -> Result<(), String> {
+    if args.len() != 1 {
+        return Err("Usage: cut <name>".to_string());
+    }
+    if clipboard.is_some() {
+        return Err("Clipboard is not empty.".to_string());
+    }
+    let rt = Runtime::new().unwrap();
+    let mut dir = match cwd.last() {
+        Some(cwd) => {
+            let inode: InodeType = rt.block_on(cwd.get(global.clone()))?;
+            match inode {
+                InodeType::Directory(dir) => dir,
+                _ => Err("Not in a directory.".to_string())?
+            }
+        },
+        None => global.get_root()
+    };
+    let stored = dir.unlink(&args[0])?;
+    if cwd.is_empty() {
+        global.save_root(&dir);
+    } else {
+        let cwd = cwd.last_mut().unwrap();
+        rt.block_on(async {
+            cwd.put(global.clone(), dir.to_enum()).await
+        })?;
+    }
+    let _ = clipboard.insert(stored);
+    Ok(())
+}
+
+fn paste(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>, clipboard: &mut Option<Stored>) -> Result<(), String> {
+    if args.len() != 1 {
+        return Err("Usage: cut <name>".to_string());
+    }
+    if clipboard.is_none() {
+        return Err("Clipboard is empty.".to_string());
+    }
+    let rt = Runtime::new().unwrap();
+    let mut dir = match cwd.last() {
+        Some(cwd) => {
+            let inode: InodeType = rt.block_on(cwd.get(global.clone()))?;
+            match inode {
+                InodeType::Directory(dir) => dir,
+                _ => Err("Not in a directory.".to_string())?
+            }
+        },
+        None => global.get_root()
+    };
+
+    let stored = clipboard.take().unwrap();
+    dir.put(&args[0], stored)?;
+
+    if cwd.is_empty() {
+        global.save_root(&dir);
+    } else {
+        let cwd = cwd.last_mut().unwrap();
+        rt.block_on(async {
+            cwd.put(global.clone(), dir.to_enum()).await
+        })?;
+    }
+
+    Ok(())
+}
+
+fn exit(_global: &Arc<Global>, _args: Vec<String>, _path: &mut Vec<String>, _cwd: &mut Vec<Stored>, clipboard: &mut Option<Stored>) -> Result<(), String> {
+    if clipboard.is_some() {
+        return Err("Clipboard is not empty. Paste it somewhere first.".to_string());
+    }
+
+    Err("SIGTERM".to_string())
+}
+
 fn stat_format(metadata: &Metadata) -> String {
     let mut s = String::new();
     s.push_str(&format!("Size: {}\n", metadata.size.human()));
@@ -265,7 +343,7 @@ fn stat_format(metadata: &Metadata) -> String {
     s
 }
 
-fn stat(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>) -> Result<(), String> {
+fn stat(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
     if args.len() != 1 {
         return Err("Usage: stat <name|.>".to_string());
     }
@@ -309,7 +387,7 @@ fn stat(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &
     Ok(())
 }
 
-fn upload(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>) -> Result<(), String> {
+fn upload(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
     if args.len() != 1 {
         return Err("Usage: upload <file>".to_string());
     }
@@ -321,7 +399,7 @@ fn upload(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd:
 
     reader.read_to_end(&mut data).map_err(|_| "Failed to read file.")?;
 
-    print!("Read {} bytes. Uploading...", data.len());
+    println!("Read {} bytes. Uploading...", data.len());
 
     let rt = Runtime::new().unwrap();
     let mut dir = match cwd.last() {
@@ -344,5 +422,44 @@ fn upload(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd:
             cwd.put(global.clone(), dir.to_enum()).await
         })?;
     }
+
+    print!("Uploaded to {}.", file_name);
+
+    Ok(())
+}
+
+fn download(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
+    if args.len() != 2 {
+        return Err("Usage: download <from> <to>".to_string());
+    }
+
+    let rt = Runtime::new().unwrap();
+    let dir = match cwd.last() {
+        Some(cwd) => {
+            let inode: InodeType = rt.block_on(cwd.get(global.clone()))?;
+            match inode {
+                InodeType::Directory(dir) => dir,
+                _ => Err("Not in a directory.".to_string())?
+            }
+        },
+        None => global.get_root()
+    };
+
+    let stored = dir.get(&args[0])?;
+    let inode: InodeType = rt.block_on(stored.get(global.clone()))?;
+    let file = match inode {
+        InodeType::File(file) => file,
+        _ => Err("Not a file.".to_string())?
+    };
+    let metadata = rt.block_on(file.metadata());
+    println!("Downloading {}...", metadata.size.human());
+    let mut buf_writer = std::io::BufWriter::new(std::fs::File::create(&args[1]).map_err(|_| "Failed to create file.")?);
+    let mut stream = file.get(global.clone());
+    while let Some(chunk) = rt.block_on(stream.next()) {
+        let slice = chunk.map_err(|_| "Failed to read file.")?;
+        buf_writer.write_all(&slice).map_err(|_| "Failed to write file.")?;
+    }
+    print!("Downloaded to {}.", args[1]);
+
     Ok(())
 }

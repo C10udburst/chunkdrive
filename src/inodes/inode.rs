@@ -14,7 +14,7 @@ use super::{file::File, directory::Directory, metadata::Metadata};
 #[async_trait]
 pub trait Inode {
     async fn metadata(&self) -> &Metadata;
-    async fn delete(&mut self, global: Arc<Global>);
+    async fn delete(&mut self, global: Arc<Global>) -> Result<(), String>;
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -40,7 +40,7 @@ impl Inode for InodeType {
         match_method!(self, metadata, ).await
     }
 
-    async fn delete(&mut self, global: Arc<Global>) {
+    async fn delete(&mut self, global: Arc<Global>) -> Result<(), String> {
         match_method!(self, delete, global).await
     }
 }

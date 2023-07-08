@@ -25,9 +25,24 @@ impl Inode for Directory {
         &self.metadata
     }
 
-    async fn delete(&mut self, global: Arc<Global>) {
+    async fn delete(&mut self, global: Arc<Global>) -> Result<(), String> {
+        let mut errors = Vec::new();
         for (_, stored) in self.children.drain() {
-            stored.delete(global.clone()).await.ok(); // TODO: handle errors
+            match &mut stored.get::<InodeType>(global.clone()).await {
+                Ok(inode) => match inode.delete(global.clone()).await {
+                    Ok(_) => (),
+                    Err(e) => errors.push(e)
+                },
+                Err(e) => errors.push(e.clone())
+            };
+            match stored.delete(global.clone()).await {
+                Ok(_) => (),
+                Err(e) => errors.push(e)
+            }
+        }
+        match errors.len() {
+            0 => Ok(()),
+            _ => Err(errors.join(", "))
         }
     }
 }
@@ -64,13 +79,14 @@ impl Directory {
 
         let stored = self.children.remove(name).unwrap();
         let mut inode: Result<InodeType, String> = stored.get(global.clone()).await;
-        match inode {
-            Ok(ref mut inode) => inode.delete(global.clone()).await,
-            Err(_) => {}
-        }
-        stored.delete(global).await.ok(); // TODO: handle errors
 
-        Ok(())
+        let res = match inode {
+            Ok(ref mut inode) => inode.delete(global.clone()).await,
+            Err(e) => Err(e)
+        };
+
+        stored.delete(global).await?;
+        res
     }
 
     pub fn unlink(&mut self, name: &String) -> Result<Stored, String> {
@@ -85,5 +101,16 @@ impl Directory {
     pub fn get(&self, name: &String) -> Result<&Stored, String> {
         self.children.get(name)
             .ok_or(format!("File {} does not exist", name))
+    }
+
+    pub fn put(&mut self, name: &String, stored: Stored) -> Result<(), String> {
+        if self.children.contains_key(name) {
+            return Err(format!("File {} already exists", name));
+        }
+        
+        self.children.insert(name.clone(), stored);
+        self.metadata.modified(Size::Entries(self.children.len()));
+        
+        Ok(())
     }
 }
