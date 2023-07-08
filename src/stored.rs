@@ -75,7 +75,7 @@ impl Stored {
 
     pub async fn delete(&self, global: Arc<Global>) -> Result<(), String> {
         // Get bucket
-        let bucket = global.get_bucket(&self.bucket).unwrap();
+        let bucket = global.get_bucket(&self.bucket).ok_or("Bucket not found")?;
         
         // Delete data
         bucket.delete(&self.descriptor)

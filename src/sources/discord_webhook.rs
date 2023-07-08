@@ -3,7 +3,6 @@ use serde::Deserialize;
 use serde_json::json;
 
 use crate::global::Descriptor;
-
 use super::source::Source;
 
 #[derive(Debug, Deserialize)]
@@ -65,12 +64,9 @@ impl Source for DiscordWebhook {
             .mime_str("application/octet-stream")
             .map_err(|e| format!("Error creating part: {}", e))?;
         let payload_part = reqwest::multipart::Part::text(json!({
-           "attachments": [
-               {
-                   "id": 0,
-                   "filename": "d"
-               }
-           ],
+            "attachments": [
+               { "id": 0, "filename": "d" }
+            ],
         }).to_string())
             .mime_str("application/json")
             .map_err(|e| format!("Error creating part: {}", e))?;
@@ -106,14 +102,11 @@ impl Source for DiscordWebhook {
             .mime_str("application/octet-stream")
             .map_err(|e| format!("Error creating part: {}", e))?;
         let payload_part = reqwest::multipart::Part::text(json!({
-            "flags": 1<<12, // suppress notifications (@silent) and embeds
+            "flags": 1<<12, // suppress notifications (@silent)
             "attachments": [
-                {
-                    "id": 0,
-                    "filename": "d"
-                }
+                { "id": 0, "filename": "d" }
             ],
-         }).to_string())
+        }).to_string())
              .mime_str("application/json")
              .map_err(|e| format!("Error creating part: {}", e))?;
         let form = reqwest::multipart::Form::new()

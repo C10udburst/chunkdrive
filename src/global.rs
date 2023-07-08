@@ -12,8 +12,6 @@ pub type Descriptor = Vec<u8>;
 pub struct Global {
     buckets: HashMap<String, Bucket>,
 
-    #[serde(default = "default_redundancy")]
-    pub redundancy: usize,
     #[serde(default = "default_direct_block_count")]
     pub direct_block_count: usize,
     
@@ -21,7 +19,6 @@ pub struct Global {
     root_path: String,
 }
 
-const fn default_redundancy() -> usize { 1 } // redundancy is disabled by default, so we set it to 1
 const fn default_direct_block_count() -> usize { 10 }
 fn default_root_path() -> String { "./root.dat".to_string() }
 

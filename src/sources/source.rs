@@ -3,7 +3,7 @@ use serde::Deserialize;
 
 use crate::global::Descriptor;
 
-use super::{local::LocalSource, discord_webhook::DiscordWebhook};
+use super::{local::LocalSource, discord_webhook::DiscordWebhook, github_releases::GithubReleases};
 
 #[async_trait]
 pub trait Source {
@@ -20,7 +20,9 @@ pub enum SourceType {
     #[serde(rename = "local")]
     LocalSource(LocalSource),
     #[serde(rename = "discord_webhook")]
-    DiscordWebhook(DiscordWebhook)
+    DiscordWebhook(DiscordWebhook),
+    #[serde(rename = "github_releases")]
+    GithubRelease(GithubReleases)
 }
 
 // This macro removes the need to write out the match statement for each method in the enum
@@ -28,7 +30,8 @@ macro_rules! match_method {
     ($self:ident, $method:ident, $($arg:expr),*) => {
         match $self {
             SourceType::LocalSource(source) => source.$method($($arg),*),
-            SourceType::DiscordWebhook(source) => source.$method($($arg),*)
+            SourceType::DiscordWebhook(source) => source.$method($($arg),*),
+            SourceType::GithubRelease(source) => source.$method($($arg),*),
         }
     };
 }
@@ -37,7 +40,8 @@ impl SourceType {
     pub fn human_readable(&self) -> &str {
         match self {
             SourceType::LocalSource(_) => "local folder",
-            SourceType::DiscordWebhook(_) => "discord webhook"
+            SourceType::DiscordWebhook(_) => "discord webhook",
+            SourceType::GithubRelease(_) => "github release",
         }
     }
 }

@@ -262,10 +262,11 @@ fn rm(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mu
     if cwd.is_empty() {
         let rt = Runtime::new().unwrap();
         let mut root = global.get_root();
-        rt.block_on(async {
+        let err = rt.block_on(async {
             root.remove(global.clone(), &args[0]).await
-        })?;
+        });
         global.save_root(&root);
+        err?;
     } else {
         let rt = Runtime::new().unwrap();
         let cwd = cwd.last_mut().unwrap();
@@ -274,12 +275,13 @@ fn rm(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mu
             InodeType::Directory(dir) => dir,
             _ => Err("Not in a directory.".to_string())?
         };
-        rt.block_on(async {
+        let err = rt.block_on(async {
             dir.remove(global.clone(), &args[0]).await
-        })?;
+        });
         rt.block_on(async {
             cwd.put(global.clone(), dir.to_enum()).await
         })?;
+        err?;
     }
     Ok(())
 }
@@ -507,7 +509,7 @@ fn bucket_test(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>,
         None => Err("No such bucket.".to_string())?
     };
     
-    let block = vec![0; bucket.max_size() - 1];
+    let block = vec![0; bucket.max_size()];
     
     let rt = Runtime::new().unwrap();
     let descriptor = rt.block_on(bucket.create())?;
