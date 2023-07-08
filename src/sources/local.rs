@@ -17,7 +17,7 @@ pub struct LocalSource {
     descriptor_length: usize,
 }
 
-const fn default_max_size() -> usize { 1024 * 1024 * 1024 }
+const fn default_max_size() -> usize { 512 * 1024 * 1024 }
 const fn default_descriptor_length() -> usize { 24 }
 
 #[async_trait]

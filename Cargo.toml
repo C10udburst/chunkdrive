@@ -11,6 +11,7 @@ async-trait = "0.1.71"
 chrono = "0.4.26"
 futures = "0.3.28"
 rand = "0.8.5"
+redox_liner = "0.5.1"
 reqwest = {version = "0.11.18", features = ["json", "multipart"]}
 rmp-serde = "1.1.1"
 rust-crypto = "0.2.36"

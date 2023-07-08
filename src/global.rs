@@ -39,6 +39,10 @@ impl Global {
             .map(|(bucket, _)| bucket)
     }
 
+    pub fn list_buckets(&self) -> Vec<&String> {
+        self.buckets.keys().collect()
+    }
+
     pub fn random_bucket(&self) -> Option<&String> {
         self.buckets
             .iter()

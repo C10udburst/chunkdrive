@@ -31,6 +31,15 @@ macro_rules! match_method {
     };
 }
 
+impl EncryptionType {
+    pub fn human_readable(&self) -> &str {
+        match self {
+            EncryptionType::None(_) => "none",
+            EncryptionType::Aes(_) => "aes"
+        }
+    }
+}
+
 impl Encryption for EncryptionType {
     fn max_size(&self, source_size: usize) -> usize {
         match_method!(self, max_size, source_size)

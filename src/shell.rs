@@ -1,9 +1,9 @@
 use std::{sync::Arc, io::{Write, BufReader, Read}};
-
-use crate::{global::Global, inodes::{directory::Directory, inode::{InodeType, Inode}, metadata::Metadata, file::File}, stored::Stored};
-
+use liner::{Context, Completer};
 use futures::StreamExt;
 use tokio::runtime::Runtime;
+
+use crate::{global::Global, inodes::{directory::Directory, inode::{InodeType, Inode}, metadata::Metadata, file::File}, stored::Stored};
 
 fn tokenize_line(line: &str) -> Vec<String> {
     let mut tokens = Vec::new();
@@ -37,26 +37,44 @@ fn tokenize_line(line: &str) -> Vec<String> {
     tokens
 }
 
+struct ShellCompleter;
+
+impl Completer for ShellCompleter {
+    fn completions(&mut self, _start: &str) -> Vec<String> {
+        let tokens = tokenize_line(_start);
+        match tokens.len() {
+            0 => COMMANDS.iter().map(|(name, _, _)| name.to_string()).collect(),
+            1 => COMMANDS.iter().filter(|(name, _, _)| name.starts_with(_start)).map(|(name, _, _)| name.to_string()).collect(),
+            _ => Vec::new()
+        }
+    }
+}
+
 pub fn shell(global: Arc<Global>) {
-    print!("Welcome to the ChunkDrive {} debug shell! Type \"help\" for a list of commands.", env!("CARGO_PKG_VERSION"));
+    println!("Welcome to the ChunkDrive {} debug shell! Type \"help\" for a list of commands.", env!("CARGO_PKG_VERSION"));
 
     let mut path: Vec<String> = Vec::new();
     let mut stored_cwd: Vec<Stored> = Vec::new();
     let mut clipboard: Option<Stored> = None;
+    let mut context = Context::new();
 
     loop {
-        print!("\n/{}> ", match path.len() {
-            0 => String::from(""),
-            1 => path.last().unwrap().clone(),
-            _ => format!("../{}", path.last().unwrap())
-        });
-        std::io::stdout().flush().ok();
-
-        let mut line = String::new();
-        match std::io::stdin().read_line(&mut line) {
-            Ok(_) => {},
-            Err(_) => continue
-        }
+        let prompt = format!("{}/{}: ",
+            match clipboard {
+                Some(_) => "📋 ",
+                None => ""
+            },
+            match path.len() {
+                0 => String::from(""),
+                1 => path.last().unwrap().clone(),
+                _ => format!("../{}", path.last().unwrap())
+            }
+        );
+    
+        let line = match context.read_line(&prompt, None, &mut ShellCompleter) {
+            Ok(line) => line,
+            Err(_) => break
+        };
         let tokens = tokenize_line(&line);
 
         if tokens.is_empty() {
@@ -84,26 +102,28 @@ pub fn shell(global: Arc<Global>) {
 }
 
 const COMMANDS: &[(&str, fn(&Arc<Global>, Vec<String>, &mut Vec<String>, &mut Vec<Stored>, &mut Option<Stored>) -> Result<(), String>, &str)] = &[
-    ("help", help, "Prints this help message."),
-    ("exit", exit, "Exits the shell."),
-    ("ls", ls, "Lists the contents of the current directory."),
-    ("mkdir", mkdir, "Creates a new directory."),
-    ("cd", cd, "Changes the current working directory."),
-    ("rm", rm, "Removes a file or directory."),
-    ("cut", cut, "Cuts a file or directory."),
-    ("paste", paste, "Pastes a file or directory."),
-    ("upload", upload, "Uploads a file to the drive"),
-    ("download", download, "Downloads a file from the drive."),
-    ("stat", stat, "Prints metadata about a file or directory."),
-    ("dbg", dbg, "Prints debug information about an object."),
-    ("root", |_, _, path, cwd, _| { path.clear(); cwd.clear(); Ok(()) }, "Returns to root directory"),
-    ("cwd", |_, _, path, _, _| Ok(print!("/{}", path.join("/"))), "Prints the current working directory."),
+    ("help",   help, "Prints this help message."),
+    ("exit",   exit, "Exits the shell."),
+    ("ls",     ls, "Lists the contents of the current directory."),
+    ("mkdir",  mkdir, "Creates a new directory."),
+    ("cd",     cd, "Changes the current working directory."),
+    ("rm",     rm, "Removes a file or directory."),
+    ("cut",    cut, "Cuts a file or directory."),
+    ("paste",  paste, "Pastes a file or directory."),
+    ("up",     upload, "Uploads a file to the drive"),
+    ("down",   download, "Downloads a file from the drive."),
+    ("stat",   stat, "Prints metadata about a file or directory."),
+    ("bkls",   bucket_list, "Lists all buckets."),
+    ("bktest", bucket_test, "Tests a bucket."),
+    ("dbg",    dbg, "Prints debug information about an object."),
+    ("root",   |_, _, path, cwd, _| { path.clear(); cwd.clear(); Ok(()) }, "Returns to root directory"),
+    ("cwd",    |_, _, path, _, _| Ok(println!("/{}", path.join("/"))), "Prints the current working directory."),
 ];
 
 fn help(_global: &Arc<Global>, _args: Vec<String>, _path: &mut Vec<String>, _cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
-    print!("Commands:");
+    println!("Commands:");
     for (name, _, description) in COMMANDS {
-        print!("\n  {:<10} {}", name, description);
+        println!("  {:<15} {}", name, description);
     }
     Ok(())
 }
@@ -145,20 +165,22 @@ fn dbg(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &m
 
 fn ls(global: &Arc<Global>, _args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
     let rt = Runtime::new().unwrap();
-    let (dir, parent) = match cwd.last() {
+    let dir = match cwd.last() {
         Some(cwd) => {
             let inode: InodeType = rt.block_on(cwd.get(global.clone()))?;
             match inode {
-                InodeType::Directory(dir) => (dir, ".."),
+                InodeType::Directory(dir) => {
+                    println!("..");
+                    dir
+                }
                 _ => Err("Not in a directory.".to_string())?
             }
         },
-        None => (global.get_root(), ".")
+        None => global.get_root()
     };
     
-    print!("{}", parent);
     for name in dir.list() {
-        print!("\n{}", name);
+        println!("{}", name);
     }
     Ok(())
 }
@@ -356,12 +378,12 @@ fn stat(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &
                 root.metadata().await.clone()
             });
             println!("Type: Directory");
-            print!("{}", stat_format(&metadata));
+            println!("{}", stat_format(&metadata));
         } else {
             let inode: InodeType = rt.block_on(cwd.last().unwrap().get(global.clone()))?;
             let metadata: &Metadata = rt.block_on(inode.metadata());
             println!("Type: Directory");
-            print!("{}", stat_format(metadata));
+            println!("{}", stat_format(metadata));
         }
     } else {
         let dir = match cwd.last() {
@@ -381,7 +403,7 @@ fn stat(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &
             InodeType::Directory(_) => println!("Type: Directory"),
             InodeType::File(_) => println!("Type: File")
         }
-        print!("{}", stat_format(metadata));
+        println!("{}", stat_format(metadata));
     }
 
     Ok(())
@@ -423,7 +445,7 @@ fn upload(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd:
         })?;
     }
 
-    print!("Uploaded to {}.", file_name);
+    println!("Uploaded to {}.", file_name);
 
     Ok(())
 }
@@ -459,7 +481,60 @@ fn download(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cw
         let slice = chunk.map_err(|_| "Failed to read file.")?;
         buf_writer.write_all(&slice).map_err(|_| "Failed to write file.")?;
     }
-    print!("Downloaded to {}.", args[1]);
+    println!("Downloaded to {}.", args[1]);
+
+    Ok(())
+}
+
+fn bucket_list(global: &Arc<Global>, _args: Vec<String>, _path: &mut Vec<String>, _cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
+    println!("  {:<20} {:<20} {:<20} {}" , "Name", "Source", "Encryption", "Max block size");
+    for bucket in global.list_buckets() {
+        let b_type = match global.get_bucket(bucket) {
+            Some(bucket) => bucket.human_readable(),
+            None => "Missing?".to_string()
+        };
+        println!("  {:<20} {}", bucket, b_type);
+    }
+    Ok(())
+}
+
+fn bucket_test(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, _cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
+    if args.len() != 1 {
+        return Err("Usage: bktest <name>".to_string());
+    }
+    let bucket = match global.get_bucket(&args[0]) {
+        Some(bucket) => bucket,
+        None => Err("No such bucket.".to_string())?
+    };
+    
+    let block = vec![0; bucket.max_size() - 1];
+    
+    let rt = Runtime::new().unwrap();
+    let descriptor = rt.block_on(bucket.create())?;
+    println!("Created descriptor: {:?}", descriptor);
+
+    rt.block_on(bucket.put(&descriptor, block.clone()))?;
+    println!("Put data of size {}.", block.len());
+
+    let retrieved = rt.block_on(bucket.get(&descriptor))?;
+    println!("Retrieved data of size {}.", retrieved.len());
+
+    rt.block_on(bucket.delete(&descriptor))?;
+    println!("Deleted data.");
+
+    if block != retrieved {
+        return Err("Data mismatch.".to_string());
+    } else {
+        println!("Data matches.");
+    }
+
+    let recieved2 = rt.block_on(bucket.get(&descriptor));
+    if recieved2.is_ok() {
+        return Err("Data still exists.".to_string());
+    }
+    println!("Deleted data was not found.");
+
+    println!("OK.");
 
     Ok(())
 }

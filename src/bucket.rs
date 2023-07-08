@@ -22,6 +22,10 @@ impl Bucket {
         )
     }
 
+    pub fn human_readable(&self) -> String {
+        format!("{:<20} {:<20} {}", self.source.human_readable(), self.encryption.human_readable(), self.max_size())
+    }
+
     // Takes a descriptor and returns a stream of data or an error (String)
     pub async fn get(&self, descriptor: &Descriptor) -> Result<Vec<u8>, String> {
         let iv = descriptor.to_vec();

@@ -33,6 +33,15 @@ macro_rules! match_method {
     };
 }
 
+impl SourceType {
+    pub fn human_readable(&self) -> &str {
+        match self {
+            SourceType::LocalSource(_) => "local folder",
+            SourceType::DiscordWebhook(_) => "discord webhook"
+        }
+    }
+}
+
 #[async_trait]
 impl Source for SourceType {
     fn max_size(&self) -> usize {
