@@ -41,7 +41,7 @@ impl SourceType {
         match self {
             SourceType::LocalSource(_) => "local folder",
             SourceType::DiscordWebhook(_) => "discord webhook",
-            SourceType::GithubRelease(_) => "github release",
+            SourceType::GithubRelease(_) => "github releases",
         }
     }
 }

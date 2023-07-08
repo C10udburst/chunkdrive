@@ -113,7 +113,7 @@ const COMMANDS: &[(&str, fn(&Arc<Global>, Vec<String>, &mut Vec<String>, &mut Ve
     ("up",     upload, "Uploads a file to the drive"),
     ("down",   download, "Downloads a file from the drive."),
     ("stat",   stat, "Prints metadata about a file or directory."),
-    ("bkls",   bucket_list, "Lists all buckets."),
+    ("lsbk",   bucket_list, "Lists all buckets."),
     ("bktest", bucket_test, "Tests a bucket."),
     ("dbg",    dbg, "Prints debug information about an object."),
     ("root",   |_, _, path, cwd, _| { path.clear(); cwd.clear(); Ok(()) }, "Returns to root directory"),
@@ -220,6 +220,17 @@ fn cd(global: &Arc<Global>, args: Vec<String>, path: &mut Vec<String>, cwd: &mut
     if args.len() != 1 {
         return Err("Usage: cd <path>".to_string());
     }
+
+    if args[0] == ".." {
+        if !path.is_empty() {
+            path.pop();
+        }
+        if !cwd.is_empty() {
+            cwd.pop();
+        }
+        return Ok(());
+    } 
+
     let rt = Runtime::new().unwrap();
     let dir = match cwd.last() {
         Some(cwd) => {
@@ -231,27 +242,18 @@ fn cd(global: &Arc<Global>, args: Vec<String>, path: &mut Vec<String>, cwd: &mut
         },
         None => global.get_root()
     };
-    if args[0] == ".." {
-        if !path.is_empty() {
-            path.pop();
+    let mut found = false;
+    for name in dir.list() {
+        if name == args[0] {
+            found = true;
+            break;
         }
-        if !cwd.is_empty() {
-            cwd.pop();
-        }
-    } else {
-        let mut found = false;
-        for name in dir.list() {
-            if name == args[0] {
-                found = true;
-                break;
-            }
-        }
-        if !found {
-            return Err("No such directory.".to_string());
-        }
-        path.push(args[0].clone());
-        cwd.push(dir.get(&args[0])?.clone());
     }
+    if !found {
+        return Err("No such directory.".to_string());
+    }
+    path.push(args[0].clone());
+    cwd.push(dir.get(&args[0])?.clone());
     Ok(())
 }
 
