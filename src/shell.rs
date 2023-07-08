@@ -59,7 +59,7 @@ pub fn shell(global: Arc<Global>) {
     let mut context = Context::new();
 
     loop {
-        let prompt = format!("{}/{}: ",
+        let prompt = format!("{}/{}# ",
             match clipboard {
                 Some(_) => "📋 ",
                 None => ""
@@ -116,14 +116,14 @@ const COMMANDS: &[(&str, fn(&Arc<Global>, Vec<String>, &mut Vec<String>, &mut Ve
     ("lsbk",   bucket_list, "Lists all buckets."),
     ("bktest", bucket_test, "Tests a bucket."),
     ("dbg",    dbg, "Prints debug information about an object."),
-    ("root",   |_, _, path, cwd, _| { path.clear(); cwd.clear(); Ok(()) }, "Returns to root directory"),
+    ("root",   |_, _, path, cwd, _| { path.clear(); cwd.clear(); Ok(()) }, "Returns to the root directory"),
     ("cwd",    |_, _, path, _, _| Ok(println!("/{}", path.join("/"))), "Prints the current working directory."),
 ];
 
 fn help(_global: &Arc<Global>, _args: Vec<String>, _path: &mut Vec<String>, _cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
     println!("Commands:");
     for (name, _, description) in COMMANDS {
-        println!("  {:<15} {}", name, description);
+        println!("  {:<10} {}", name, description);
     }
     Ok(())
 }
@@ -415,7 +415,7 @@ fn stat(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &
 
 fn upload(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
     if args.len() != 1 {
-        return Err("Usage: upload <file>".to_string());
+        return Err("Usage: up <file>".to_string());
     }
 
     let file_name = args[0].clone().split('/').last().ok_or("Invalid file name.")?.to_string();
@@ -456,7 +456,7 @@ fn upload(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd:
 
 fn download(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>, _clipboard: &mut Option<Stored>) -> Result<(), String> {
     if args.len() != 2 {
-        return Err("Usage: download <from> <to>".to_string());
+        return Err("Usage: down <from> <to>".to_string());
     }
 
     let rt = Runtime::new().unwrap();

@@ -13,7 +13,6 @@ use super::block::{Block, BlockType};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DirectBlock {
-    // each entry is a bucket name and a descriptor
     #[serde(rename = "b")]
     bucket: String,
     #[serde(rename = "d")]

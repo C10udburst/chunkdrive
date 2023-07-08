@@ -1,10 +1,10 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, sync::Arc};
 
 use rand::seq::IteratorRandom;
 use serde::{Deserialize, Serialize};
 use rmp_serde::{Deserializer, Serializer};
 
-use crate::{bucket::Bucket, inodes::directory::Directory};
+use crate::{bucket::Bucket, inodes::directory::Directory, services::service::{ServiceType, Service}};
 
 pub type Descriptor = Vec<u8>;
 
@@ -17,10 +17,19 @@ pub struct Global {
     
     #[serde(default = "default_root_path")]
     root_path: String,
+
+    #[serde(default)]
+    services: Vec<ServiceType>,
 }
 
 const fn default_direct_block_count() -> usize { 10 }
 fn default_root_path() -> String { "./root.dat".to_string() }
+
+pub fn run_services(global: Arc<Global>) {
+    for service in global.services.iter() {
+        service.run(global.clone());
+    }
+}
 
 impl Global {
     pub fn get_bucket(&self, name: &str) -> Option<&Bucket> {

@@ -10,6 +10,7 @@ mod bucket;
 mod encryption;
 mod global;
 mod inodes;
+mod services;
 mod sources;
 mod shell;
 mod stored;
@@ -40,9 +41,13 @@ fn main() {
         panic!("Could not find config file. Please set CD_CONFIG_PATH or place config.yml in one of the following locations: {:?}", CONFIG_PATHS))
     ).unwrap();
     let global: Global = from_reader(file).unwrap();
+    let global = Arc::new(global);
 
     // if run with --shell, start the shell
     if args().any(|arg| arg == "--shell") {
-        shell::shell(Arc::new(global));
+        shell::shell(global);
+    } else { // otherwise, start services
+        global::run_services(global);
+        std::thread::park();
     }
 }
