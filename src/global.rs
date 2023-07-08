@@ -4,7 +4,7 @@ use rand::seq::IteratorRandom;
 use serde::{Deserialize, Serialize};
 use rmp_serde::{Deserializer, Serializer};
 
-use crate::{bucket::Bucket, inodes::directory::Directory, stored::Stored};
+use crate::{bucket::Bucket, inodes::directory::Directory};
 
 #[derive(Deserialize, Debug)]
 pub struct Global {
@@ -64,6 +64,8 @@ impl Global {
 
     pub fn save_root(&self, root: &Directory) {
         let mut file = std::fs::File::create(&self.root_path).unwrap();
-        root.serialize(&mut Serializer::new(&mut file)).unwrap();
+        let mut serializer = Serializer::new(&mut file)
+            .with_struct_map(); // https://github.com/3Hren/msgpack-rust/issues/318
+        root.serialize(&mut serializer).unwrap();
     }
 }

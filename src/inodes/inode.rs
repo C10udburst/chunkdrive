@@ -24,3 +24,23 @@ pub enum InodeType {
     #[serde(rename = "d")]
     Directory(Directory),
 }
+
+macro_rules! match_method {
+    ($self:ident, $method:ident, $($arg:expr),*) => {
+        match $self {
+            InodeType::File(inode) => inode.$method($($arg),*),
+            InodeType::Directory(inode) => inode.$method($($arg),*),
+        }
+    };
+}
+
+#[async_trait]
+impl Inode for InodeType {
+    async fn metadata(&self) -> &Metadata {
+        match_method!(self, metadata, ).await
+    }
+
+    async fn delete(&mut self, global: Arc<Global>) {
+        match_method!(self, delete, global).await
+    }
+}

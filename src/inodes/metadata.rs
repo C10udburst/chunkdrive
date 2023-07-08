@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::{time::{SystemTime, UNIX_EPOCH}, cmp::Ordering};
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Ord)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Ord, Clone)]
 pub enum Size {
     #[serde(rename = "e")]
     Entries(usize),
@@ -49,7 +49,7 @@ impl Size {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub struct Metadata {
     #[serde(rename = "c")]
     pub created: u64,

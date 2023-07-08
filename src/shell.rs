@@ -1,6 +1,6 @@
 use std::{sync::Arc, io::Write};
 
-use crate::{global::Global, inodes::directory::Directory, stored::Stored};
+use crate::{global::Global, inodes::{directory::Directory, inode::{InodeType, Inode}, metadata::{self, Metadata}}, stored::{Stored, self}};
 
 use tokio::runtime::Runtime;
 
@@ -21,7 +21,6 @@ fn tokenize_line(line: &str) -> Vec<String> {
             escape = true;
         } else if c == '"' {
             in_string = !in_string;
-            token.push(c);
         } else if c == ' ' && !in_string {
             if !token.is_empty() {
                 tokens.push(token);
@@ -44,7 +43,11 @@ pub fn shell(global: Arc<Global>) {
     let mut stored_cwd: Vec<Stored> = Vec::new();
 
     loop {
-        print!("\n{}> ", path.join("/")); // TODO: make this smarter, so it doesn't print the full path if it's too long
+        print!("\n/{}> ", match path.len() {
+            0 => String::from(""),
+            1 => path.last().unwrap().clone(),
+            _ => format!("../{}", path.last().unwrap())
+        });
         std::io::stdout().flush().ok();
 
         let mut line = String::new();
@@ -80,11 +83,15 @@ pub fn shell(global: Arc<Global>) {
 
 const COMMANDS: &[(&str, fn(&Arc<Global>, Vec<String>, &mut Vec<String>, &mut Vec<Stored>) -> Result<(), String>, &str)] = &[
     ("help", help, "Prints this help message."),
-    ("exit", |_, _, _, _| Err("SIGTERM".to_string()), "Exits the shell."),
-    ("cwd", |_, _, path, _| Ok(print!("{}/", path.join("/"))), "Prints the current working directory."),
     ("ls", ls, "Lists the contents of the current directory."),
     ("mkdir", mkdir, "Creates a new directory."),
     ("cd", cd, "Changes the current working directory."),
+    ("rm", rm, "Removes a file or directory."),
+    ("stat", stat, "Prints metadata about a file or directory."),
+    ("dbg", dbg, "Prints debug information about an object."),
+    ("root", |_, _, path, cwd| { path.clear(); cwd.clear(); Ok(()) }, "Returns to root directory"),
+    ("exit", |_, _, _, _| Err("SIGTERM".to_string()), "Exits the shell."),
+    ("cwd", |_, _, path, _| Ok(print!("/{}", path.join("/"))), "Prints the current working directory."),
 ];
 
 fn help(_global: &Arc<Global>, _args: Vec<String>, _path: &mut Vec<String>, _cwd: &mut Vec<Stored>) -> Result<(), String> {
@@ -95,11 +102,50 @@ fn help(_global: &Arc<Global>, _args: Vec<String>, _path: &mut Vec<String>, _cwd
     Ok(())
 }
 
+fn dbg(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>) -> Result<(), String> {
+    if args.len() != 1 {
+        return Err("Usage: dbg <global|.|<path>>".to_string());
+    }
+    if args[0] == "global" {
+        dbg!(global);
+        Ok(())
+    } else if args[0] == "." {
+        let rt = Runtime::new().unwrap();
+        if cwd.is_empty() {
+            dbg!(global.get_root());
+        } else {
+            let inode: InodeType = rt.block_on(cwd.last().unwrap().get(global.clone()))?;
+            dbg!(inode);
+        }
+        Ok(())
+    } else {
+        let rt = Runtime::new().unwrap();
+        let dir = match cwd.last() {
+            Some(cwd) => {
+                let inode: InodeType = rt.block_on(cwd.get(global.clone()))?;
+                match inode {
+                    InodeType::Directory(dir) => dir,
+                    _ => Err("Not in a directory.".to_string())?
+                }
+            },
+            None => global.get_root()
+        };
+        let stored = dir.get(&args[0])?;
+        let inode: InodeType = rt.block_on(stored.get(global.clone()))?;
+        dbg!(inode);
+        Ok(())
+    }
+}
+
 fn ls(global: &Arc<Global>, _args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>) -> Result<(), String> {
     let rt = Runtime::new().unwrap();
     let (dir, parent) = match cwd.last() {
         Some(cwd) => {
-            (rt.block_on(cwd.get(global.clone()))?, "..")
+            let inode: InodeType = rt.block_on(cwd.get(global.clone()))?;
+            match inode {
+                InodeType::Directory(dir) => (dir, ".."),
+                _ => Err("Not in a directory.".to_string())?
+            }
         },
         None => (global.get_root(), ".")
     };
@@ -127,12 +173,16 @@ fn mkdir(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: 
     } else {
         let rt = Runtime::new().unwrap();
         let cwd = cwd.last_mut().unwrap();
-        let mut dir: Directory = rt.block_on(cwd.get(global.clone()))?;
+        let inode: InodeType = rt.block_on(cwd.get(global.clone()))?;
+        let mut dir = match inode {
+            InodeType::Directory(dir) => dir,
+            _ => Err("Not in a directory.".to_string())?
+        };
         rt.block_on(async {
             dir.add(global.clone(), &args[0], Directory::new().to_enum()).await
         })?;
         rt.block_on(async {
-            cwd.put(global.clone(), dir).await
+            cwd.put(global.clone(), dir.to_enum()).await
         })?;
     }
     Ok(())
@@ -143,11 +193,15 @@ fn cd(global: &Arc<Global>, args: Vec<String>, path: &mut Vec<String>, cwd: &mut
         return Err("Usage: cd <path>".to_string());
     }
     let rt = Runtime::new().unwrap();
-    let (dir, _) = match cwd.last() {
+    let dir = match cwd.last() {
         Some(cwd) => {
-            (rt.block_on(cwd.get(global.clone()))?, "..")
+            let inode: InodeType = rt.block_on(cwd.get(global.clone()))?;
+            match inode {
+                InodeType::Directory(dir) => dir,
+                _ => Err("Not in a directory.".to_string())?
+            }
         },
-        None => (global.get_root(), ".")
+        None => global.get_root()
     };
     if args[0] == ".." {
         if !path.is_empty() {
@@ -170,5 +224,86 @@ fn cd(global: &Arc<Global>, args: Vec<String>, path: &mut Vec<String>, cwd: &mut
         path.push(args[0].clone());
         cwd.push(dir.get(&args[0])?.clone());
     }
+    Ok(())
+}
+
+fn rm(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>) -> Result<(), String> {
+    if args.len() != 1 {
+        return Err("Usage: rm <name>".to_string());
+    }
+    if cwd.is_empty() {
+        let rt = Runtime::new().unwrap();
+        let mut root = global.get_root();
+        rt.block_on(async {
+            root.remove(global.clone(), &args[0]).await
+        })?;
+        global.save_root(&root);
+    } else {
+        let rt = Runtime::new().unwrap();
+        let cwd = cwd.last_mut().unwrap();
+        let inode: InodeType = rt.block_on(cwd.get(global.clone()))?;
+        let mut dir = match inode {
+            InodeType::Directory(dir) => dir,
+            _ => Err("Not in a directory.".to_string())?
+        };
+        rt.block_on(async {
+            dir.remove(global.clone(), &args[0]).await
+        })?;
+        rt.block_on(async {
+            cwd.put(global.clone(), dir.to_enum()).await
+        })?;
+    }
+    Ok(())
+}
+
+fn stat_format(metadata: &Metadata) -> String {
+    let mut s = String::new();
+    s.push_str(&format!("Size: {}\n", metadata.size.human()));
+    s.push_str(&format!("Created: {}\n", metadata.human_created()));
+    s.push_str(&format!("Modified: {}", metadata.human_modified()));
+    s
+}
+
+fn stat(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>) -> Result<(), String> {
+    if args.len() != 1 {
+        return Err("Usage: stat <name|.>".to_string());
+    }
+    let rt = Runtime::new().unwrap();
+
+    if args[0] == "." {
+        if cwd.is_empty() {
+            let metadata: Metadata = rt.block_on(async {
+                let root = global.get_root();
+                root.metadata().await.clone()
+            });
+            println!("Type: Directory");
+            print!("{}", stat_format(&metadata));
+        } else {
+            let inode: InodeType = rt.block_on(cwd.last().unwrap().get(global.clone()))?;
+            let metadata: &Metadata = rt.block_on(inode.metadata());
+            println!("Type: Directory");
+            print!("{}", stat_format(metadata));
+        }
+    } else {
+        let dir = match cwd.last() {
+            Some(cwd) => {
+                let inode: InodeType = rt.block_on(cwd.get(global.clone()))?;
+                match inode {
+                    InodeType::Directory(dir) => dir,
+                    _ => Err("Not in a directory.".to_string())?
+                }
+            },
+            None => global.get_root()
+        };
+        let stored = dir.get(&args[0])?;
+        let inode: InodeType = rt.block_on(stored.get(global.clone()))?;
+        let metadata: &Metadata = rt.block_on(inode.metadata());
+        match inode {
+            InodeType::Directory(_) => println!("Type: Directory"),
+            InodeType::File(_) => println!("Type: File")
+        }
+        print!("{}", stat_format(metadata));
+    }
+
     Ok(())
 }

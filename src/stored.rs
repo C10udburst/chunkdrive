@@ -34,7 +34,8 @@ impl Stored {
 
     pub async fn put<T: Serialize>(&self, global: Arc<Global>, data: T) -> Result<(), String> {
         // Serialize data
-        let mut serializer = Serializer::new(Vec::new());
+        let mut serializer = Serializer::new(Vec::new())
+            .with_struct_map(); // https://github.com/3Hren/msgpack-rust/issues/318
         data.serialize(&mut serializer).map_err(|e| e.to_string())?;
         let data = serializer.into_inner();
 
@@ -51,7 +52,8 @@ impl Stored {
 
     pub async fn create<T: Serialize>(global: Arc<Global>, data: T) -> Result<Stored, String> {
         // Serialize data
-        let mut serializer = Serializer::new(Vec::new());
+        let mut serializer = Serializer::new(Vec::new())
+            .with_struct_map();
         data.serialize(&mut serializer).map_err(|e| e.to_string())?;
         let data = serializer.into_inner();
 
