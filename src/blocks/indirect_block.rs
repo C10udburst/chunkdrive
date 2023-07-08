@@ -118,7 +118,7 @@ impl Block for IndirectBlock {
 
         // if there is still data left, we create a stored block
         if start < end {
-            let slice = data[start..].to_vec();
+            let slice = data[start-slice_offset..].to_vec();
             let block = StoredBlock::create(global, slice, start).await?;
             blocks.push(block.to_enum());
         }

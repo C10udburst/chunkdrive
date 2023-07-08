@@ -67,6 +67,6 @@ async fn encrypted_fits_direct_blocks() {
 
 #[tokio::test]
 async fn unencrypted_needs_indirect_blocks() {
-    let data = vec![1u8, 2, 3, 4, 5].repeat(100);
-    shared1(false, 30, data).await;
+    let data = vec![1u8, 2, 3, 4, 5].repeat(10_000);
+    shared1(false, 700, data).await;
 }
