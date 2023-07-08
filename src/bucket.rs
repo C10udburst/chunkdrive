@@ -1,5 +1,5 @@
 /*
-    Bucket is an abstraction over a source, it includes additional features like encryption or caching.
+    Bucket is an abstraction over a source, it includes additional features like encryption, compression or caching.
     Each bucket has a maximum size, which is the maximum size of a single data chunk that can be stored in the bucket.
 */
 

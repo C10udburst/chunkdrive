@@ -52,7 +52,7 @@ impl GithubReleases {
 #[async_trait]
 impl Source for GithubReleases {
     fn max_size(&self) -> usize {
-        1024 * 1024 * 10
+        1024 * 1024 * 1024 // 1 GB
     }
 
     async fn get(&self, descriptor: &Descriptor) -> Result<Vec<u8>, String> {
