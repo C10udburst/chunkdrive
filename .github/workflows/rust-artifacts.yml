@@ -41,6 +41,8 @@ jobs:
         with:
           toolchain: stable
           override: true
+      - name: Install rustup target
+        run: rustup target add ${{ matrix.target }}
       - name: Install cross
         if: matrix.cross
         run: cargo install cross
@@ -51,7 +53,8 @@ jobs:
         if: matrix.cross
         run: cross build --target ${{ matrix.target }} --release
       - name: Archive
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
-          name: ${{ matrix.target }}
+          name: ${{ matrix.name }}
           path: target/${{ matrix.target }}/release/chunkdrive
+          retention-days: 3
