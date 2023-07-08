@@ -3,28 +3,23 @@
     It does not split the data into chunks.
  */
 
-use std::{ops::Range, sync::Arc, vec};
+use std::{ops::Range, sync::Arc};
 use async_trait::async_trait;
 use futures::stream::BoxStream;
 use serde::{Serialize, Deserialize};
-use crypto::{
-    md5::Md5,
-    digest::Digest
-};
 
-use crate::global::Global;
+use crate::global::{Global, Descriptor};
 use super::block::{Block, BlockType};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct DirectBlock {
     // each entry is a bucket name and a descriptor
-    #[serde(rename = "s")]
-    sources: Vec<(String, String)>,
+    #[serde(rename = "b")]
+    bucket: String,
+    #[serde(rename = "d")]
+    descriptor: Descriptor,
     #[serde(rename = "r")]
     range: Range<usize>,
-    // the md5 hash of the data
-    #[serde(rename = "h")]
-    hash: Vec<u8>,
 } // we use short names to reduce the size of the serialized data while allowing backwards compatibility
 
 #[async_trait]
@@ -38,192 +33,80 @@ impl Block for DirectBlock {
             if range.end <= self.range.start || range.start >= self.range.end {
                 return // the range is outside of the block, so we return an empty stream
             }
-            let mut had_error = false;
-            let mut found = false;
-            let mut md5 = Md5::new();
-            for (bucket, descriptor) in self.sources.iter() {
-                let bucket = match global.get_bucket(bucket) {
-                    Some(bucket) => bucket,
-                    None => {
-                        had_error = true;
-                        continue
-                    }
-                };
-                let data = match bucket.get(descriptor).await {
-                    Ok(data) => data,
-                    Err(_) => {
-                        had_error = true;
-                        continue
-                    }
-                };
-                md5.reset();
-                let mut hash = vec![0; 16];
-                md5.input(&data);
-                md5.result(&mut hash);
-                if hash != self.hash {
-                    had_error = true;
-                    continue
-                }
-                found = true;
+            let bucket = match global.get_bucket(&self.bucket) {
+                Some(bucket) => bucket,
+                None => Err("Bucket not found".to_string())?
+            };
+            let data = match bucket.get(&self.descriptor).await {
+                Ok(data) => data,
+                Err(_) => Err("Could not get the data".to_string())?
+            };
 
-                // calculate the data slice
-                let start = std::cmp::max(range.start, self.range.start) - self.range.start;
-                let end = std::cmp::min(range.end, self.range.end) - self.range.start;
-                let data = data[start..end].to_vec();
-                yield Ok(data);
-            }
-            if !found {
-                yield Err("Could not find the data".to_string());
-            }
-            if had_error {
-                // TODO: schedule a repair
-            }
+            // calculate the data slice
+            let start = std::cmp::max(range.start, self.range.start) - self.range.start;
+            let end = std::cmp::min(range.end, self.range.end) - self.range.start;
+            let data = data[start..end].to_vec();
+            yield Ok(data);
         })
     }
 
     // indirect blocks ensure that the data.length == range.length && data[0] corresponds to range.start
     async fn put(&mut self, global: Arc<Global>, data: Vec<u8>, _range: Range<usize>) -> Result<(), String> {
         // put the data
-        let mut failed_count = 0;
-        for (bucket_name, descriptor) in self.sources.iter() {
-            let bucket = match global.get_bucket(bucket_name) {
-                Some(bucket) => bucket,
-                None => {
-                    failed_count += 1;
-                    continue
-                }
-            };
-            match bucket.put(descriptor, data.clone()).await {
-                Ok(_) => continue,
-                Err(_) => {
-                    failed_count += 1;
-                    continue
-                }
-            }
+        let bucket = match global.get_bucket(&self.bucket) {
+            Some(bucket) => bucket,
+            None => return Err("Bucket not found".to_string())
+        };
+        match bucket.put(&self.descriptor, data.clone()).await {
+            Ok(_) => Ok(()),
+            Err(e) => Err(format!("Could not put the data: {}", e))
         }
-
-        if failed_count == self.sources.len() {
-            return Err("Could not put the data".to_string())
-        }
-
-        // hash
-        let mut hash = vec![0; 16];
-        let mut md5 = Md5::new();
-        md5.input(&data);
-        md5.result(&mut hash);
-        self.hash = hash;
-
-        if failed_count > 0 {
-            // TODO: schedule a repair
-        }
-
-        Ok(())
     }
 
-    async fn delete(&self, global: Arc<Global>) {
-        for (bucket, descriptor) in self.sources.iter() {
-            let bucket = match global.get_bucket(bucket) {
-                Some(bucket) => bucket,
-                None => continue
-            };
-            let _ = bucket.delete(descriptor).await;
-        }
+    async fn delete(&self, global: Arc<Global>) -> Result<(), String> {
+        let bucket = match global.get_bucket(&self.bucket) {
+            Some(bucket) => bucket,
+            None => return Err("Bucket not found".to_string())
+        };
+        bucket.delete(&self.descriptor).await
     }
 
     async fn create(global: Arc<Global>, data: Vec<u8>, start: usize) -> Result<BlockType, String> {
         // finding the buckets
-        let mut buckets = vec![global.random_bucket().ok_or("No buckets available".to_string())?];
-        let base_bucket = match global.get_bucket(&buckets[0]) {
+        let bucket_name = global.random_bucket().ok_or("No buckets found".to_string())?;
+        let bucket = match global.get_bucket(&bucket_name) {
             Some(bucket) => bucket,
-            None => return Err("No buckets available".to_string())
+            None => Err("Bucket not found".to_string())?
         };
-        for _ in 1..global.redundancy {
-            let bucket = global.next_bucket(base_bucket.max_size(), &buckets).ok_or(format!("Not enough buckets available ({} needed)", global.redundancy))?;
-            buckets.push(bucket);
-        }
 
         // slice the data
-        let data = data[..std::cmp::min(data.len(), base_bucket.max_size())].to_vec();
+        let data = data[..std::cmp::min(data.len(), bucket.max_size())].to_vec();
         if data.len() == 0 {
             return Err("Data is empty".to_string())
         }
 
-        // hashing the data
-        let mut hash = vec![0; 16];
-        let mut md5 = Md5::new();
-        md5.input(&data);
-        md5.result(&mut hash);
-
         // create descriptors
-        let mut failed = false;
-        let mut descriptors = Vec::new();
-        for bucket_name in buckets.iter() {
-            let bucket = match global.get_bucket(bucket_name) {
-                Some(bucket) => bucket,
-                None => {
-                    failed = true;
-                    break
-                }
-            };
-            let descriptor = match bucket.create().await {
-                Ok(descriptor) => descriptor,
-                Err(_) => {
-                    failed = true;
-                    break
-                }
-            };
-            descriptors.push((bucket_name.to_owned().to_owned(), descriptor));
-        }
-        
-        if failed {
-            // remove the descriptors if they were created
-            for (bucket_name, descriptor) in descriptors.iter() {
-                let bucket = match global.get_bucket(bucket_name) {
-                    Some(bucket) => bucket,
-                    None => continue
-                };
-                let _ = bucket.delete(descriptor).await;
-            }
-        }
+        let bucket = match global.get_bucket(bucket_name) {
+            Some(bucket) => bucket,
+            None => Err("Bucket not found".to_string())?
+        };
+        let descriptor = match bucket.create().await {
+            Ok(descriptor) => descriptor,
+            Err(e) => return Err(format!("Could not create the descriptor: {}", e))
+        };
 
         // put the data
-        let mut failed_descriptors = Vec::new();
-        for (bucket_name, descriptor) in descriptors.iter() {
-            let bucket = match global.get_bucket(bucket_name) {
-                Some(bucket) => bucket,
-                None => {
-                    failed_descriptors.push((bucket_name.to_owned(), descriptor.to_owned()));
-                    continue
-                }
-            };
-            match bucket.put(descriptor, data.clone()).await {
-                Ok(_) => continue,
-                Err(_) => {
-                    failed_descriptors.push((bucket_name.to_owned(), descriptor.to_owned()));
-                    continue
-                }
-            }
-        }
-
-        // remove failed descriptors
-        for (bucket_name, descriptor) in failed_descriptors.iter() {
-            let bucket = match global.get_bucket(bucket_name) {
-                Some(bucket) => bucket,
-                None => continue
-            };
-            let _ = bucket.delete(descriptor).await;
-        }
-        descriptors.retain(|(bucket_name, descriptor)| !failed_descriptors.contains(&(bucket_name.to_owned(), descriptor.to_owned())));
+        let bucket = match global.get_bucket(bucket_name) {
+            Some(bucket) => bucket,
+            None => Err("Bucket not found".to_string())?
+        };
+        bucket.put(&descriptor, data.clone()).await?;
 
         Ok(BlockType::Direct(DirectBlock {
-            sources: descriptors,
             range: start..start + data.len(),
-            hash,
+            bucket: bucket_name.clone(),
+            descriptor
         }))
-    }
-
-    async fn repair(&self, _global: Arc<Global>, _range: Range<usize>) -> Result<(), String> {
-        Err("Not implemented".to_string())
     }
 
     fn to_enum(self) -> BlockType {

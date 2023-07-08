@@ -6,6 +6,8 @@ use rmp_serde::{Deserializer, Serializer};
 
 use crate::{bucket::Bucket, inodes::directory::Directory};
 
+pub type Descriptor = Vec<u8>;
+
 #[derive(Deserialize, Debug)]
 pub struct Global {
     buckets: HashMap<String, Bucket>,

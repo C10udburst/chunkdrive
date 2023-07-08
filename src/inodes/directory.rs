@@ -27,7 +27,7 @@ impl Inode for Directory {
 
     async fn delete(&mut self, global: Arc<Global>) {
         for (_, stored) in self.children.drain() {
-            stored.delete(global.clone()).await;
+            stored.delete(global.clone()).await.ok(); // TODO: handle errors
         }
     }
 }
@@ -68,7 +68,7 @@ impl Directory {
             Ok(ref mut inode) => inode.delete(global.clone()).await,
             Err(_) => {}
         }
-        stored.delete(global).await;
+        stored.delete(global).await.ok(); // TODO: handle errors
 
         Ok(())
     }

@@ -2,6 +2,8 @@ use async_trait::async_trait;
 use serde::Deserialize;
 use serde_json::json;
 
+use crate::global::Descriptor;
+
 use super::source::Source;
 
 #[derive(Debug, Deserialize)]
@@ -29,8 +31,10 @@ impl Source for DiscordWebhook {
         1024 * 1024 * 24
     }
 
-    async fn get(&self, descriptor: &String) -> Result<Vec<u8>, String> {
-        let url = format!("{}/messages/{}", self.url, descriptor);
+    async fn get(&self, descriptor: &Descriptor) -> Result<Vec<u8>, String> {
+        let snowflake = std::str::from_utf8(&descriptor)
+            .map_err(|e| format!("Error parsing descriptor: {}", e))?;
+        let url = format!("{}/messages/{}", self.url, snowflake);
         let client = reqwest::Client::new();
         let response = client
             .get(&url)
@@ -51,8 +55,10 @@ impl Source for DiscordWebhook {
         }
     }
 
-    async fn put(&self, descriptor: &String, data: Vec<u8>) -> Result<(), String> {
-        let url = format!("{}/messages/{}", self.url, descriptor);
+    async fn put(&self, descriptor: &Descriptor, data: Vec<u8>) -> Result<(), String> {
+        let snowflake = std::str::from_utf8(&descriptor)
+            .map_err(|e| format!("Error parsing descriptor: {}", e))?;
+        let url = format!("{}/messages/{}", self.url, snowflake);
         let client = reqwest::Client::new();
         let data_part = reqwest::multipart::Part::bytes(data)
             .file_name("d")
@@ -80,8 +86,10 @@ impl Source for DiscordWebhook {
         Ok(())
     }
 
-    async fn delete(&self, descriptor: &String) -> Result<(), String> {
-        let url = format!("{}/messages/{}", self.url, descriptor);
+    async fn delete(&self, descriptor: &Descriptor) -> Result<(), String> {
+        let snowflake = std::str::from_utf8(&descriptor)
+            .map_err(|e| format!("Error parsing descriptor: {}", e))?;
+        let url = format!("{}/messages/{}", self.url, snowflake);
         let client = reqwest::Client::new();
         client
             .delete(&url)
@@ -91,7 +99,7 @@ impl Source for DiscordWebhook {
         Ok(())
     }
 
-    async fn create(&self) -> Result<String, String> {
+    async fn create(&self) -> Result<Descriptor, String> {
         let client = reqwest::Client::new();
         let empty = reqwest::multipart::Part::bytes(Vec::new())
             .file_name("d")
@@ -121,6 +129,6 @@ impl Source for DiscordWebhook {
             .json::<MessageResponse>()
             .await
             .map_err(|e| format!("Error parsing response: {}", e))?;
-        Ok(parsed.id)
+        Ok(parsed.id.as_bytes().to_vec())
     }
 }

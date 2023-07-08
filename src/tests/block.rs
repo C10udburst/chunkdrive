@@ -38,7 +38,7 @@ async fn shared1(encryption: bool, local_size: usize, data: Vec<u8>) {
         }
         assert_eq!(got2, data1);
     }
-    block.delete(global.clone()).await;
+    block.delete(global.clone()).await.unwrap();
 }
 
 #[tokio::test]

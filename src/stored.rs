@@ -7,14 +7,14 @@
 use std::sync::Arc;
 use serde::{Serialize, Deserialize};
 use rmp_serde::{Serializer, Deserializer};
-use crate::{global::Global};
+use crate::{global::{Global, Descriptor}};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Stored {
     #[serde(rename = "b")]
     bucket: String,
     #[serde(rename = "d")]
-    descriptor: String,
+    descriptor: Descriptor,
 }
 
 impl Stored {
@@ -73,12 +73,12 @@ impl Stored {
         })
     }
 
-    pub async fn delete(&self, global: Arc<Global>) {
+    pub async fn delete(&self, global: Arc<Global>) -> Result<(), String> {
         // Get bucket
         let bucket = global.get_bucket(&self.bucket).unwrap();
         
         // Delete data
         bucket.delete(&self.descriptor)
-            .await.ok();
+            .await
     }
 }

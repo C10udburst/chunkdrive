@@ -38,9 +38,21 @@ impl Block for StoredBlock {
         })
     }
 
-    async fn delete(&self, global: Arc<Global>) {
-        self.stored.get::<BlockType>(global.clone()).await.unwrap().delete(global.clone()).await;
-        self.stored.delete(global).await
+    async fn delete(&self, global: Arc<Global>) -> Result<(), String> {
+        let mut errors = Vec::new();
+        match self.stored.get::<BlockType>(global.clone()).await.unwrap().delete(global.clone()).await {
+            Ok(_) => (),
+            Err(e) => errors.push(e)
+        }
+        match self.stored.delete(global).await {
+            Ok(_) => (),
+            Err(e) => errors.push(e)
+        }
+        if errors.len() > 0 {
+            Err(errors.join(", "))
+        } else {
+            Ok(())
+        }
     }
 
     async fn create(global: Arc<Global>, data: Vec<u8>, start: usize) -> Result<BlockType, String> {
@@ -49,10 +61,6 @@ impl Block for StoredBlock {
         Ok(BlockType::Stored(StoredBlock {
             stored
         }))
-    }
-
-    async fn repair(&self, global: Arc<Global>, range: Range<usize>) -> Result<(), String> {
-        self.stored.get::<BlockType>(global.clone()).await?.repair(global, range).await
     }
 
     fn to_enum(self) -> BlockType {

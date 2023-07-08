@@ -79,9 +79,18 @@ impl Block for IndirectBlock {
         Ok(())
     }
 
-    async fn delete(&self, global: Arc<Global>) {
+    async fn delete(&self, global: Arc<Global>) -> Result<(), String> {
+        let mut errors= Vec::new();
         for block in self.blocks.iter() {
-            block.delete(global.clone()).await;
+            match block.delete(global.clone()).await {
+                Ok(_) => (),
+                Err(err) => errors.push(err),
+            }
+        }
+        if errors.len() > 0 {
+            Err(errors.join(", "))
+        } else {
+            Ok(())
         }
     }
 
@@ -108,11 +117,15 @@ impl Block for IndirectBlock {
 
         // if we encountered an error, we delete all the blocks we created
         if let Some(err) = error {
+            let mut errors = vec![err];
             for block in blocks.iter() {
-                block.delete(global.clone()).await;
+                match block.delete(global.clone()).await {
+                    Ok(_) => (),
+                    Err(err) => errors.push(err),
+                }
             }
 
-            return Err(err);
+            return Err(errors.join(", "));
         }
 
 
@@ -122,16 +135,10 @@ impl Block for IndirectBlock {
             let block = StoredBlock::create(global, slice, start).await?;
             blocks.push(block.to_enum());
         }
+        
         Ok(BlockType::Indirect(IndirectBlock {
             blocks,
         }))
-    }
-
-    async fn repair(&self, global: Arc<Global>, range: Range<usize>) -> Result<(), String> {
-        for block in self.blocks.iter() {
-            block.repair(global.clone(), range.clone()).await?;
-        }
-        Ok(())
     }
 
     fn to_enum(self) -> BlockType {

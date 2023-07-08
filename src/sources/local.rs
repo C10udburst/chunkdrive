@@ -3,6 +3,8 @@ use serde::Deserialize;
 use tokio::{io::{BufReader, AsyncReadExt, AsyncWriteExt}, fs::{File, remove_file, OpenOptions}};
 use rand::{thread_rng, Rng, distributions::Alphanumeric};
 
+use crate::global::Descriptor;
+
 use super::source::Source;
 
 
@@ -24,7 +26,8 @@ impl Source for LocalSource {
         self.max_size
     }
 
-    async fn get(&self, descriptor: &String) -> Result<Vec<u8>, String> {
+    async fn get(&self, descriptor: &Descriptor) -> Result<Vec<u8>, String> {
+        let descriptor = std::str::from_utf8(descriptor).map_err(|e| format!("Error parsing descriptor: {}", e))?;
         let file_path = format!("{}/{}", self.folder, descriptor);
         let file = match File::open(file_path).await {
             Ok(file) => file,
@@ -36,7 +39,8 @@ impl Source for LocalSource {
         Ok(data)
     }
 
-    async fn put(&self, descriptor: &String, data: Vec<u8>) -> Result<(), String> {
+    async fn put(&self, descriptor: &Descriptor, data: Vec<u8>) -> Result<(), String> {
+        let descriptor = std::str::from_utf8(descriptor).map_err(|e| format!("Error parsing descriptor: {}", e))?;
         let file_path = format!("{}/{}", self.folder, descriptor);
         let mut file = match OpenOptions::new()
             .write(true)
@@ -52,7 +56,8 @@ impl Source for LocalSource {
         Ok(())
     }
 
-    async fn delete(&self, descriptor: &String) -> Result<(), String> {
+    async fn delete(&self, descriptor: &Descriptor) -> Result<(), String> {
+        let descriptor = std::str::from_utf8(descriptor).map_err(|e| format!("Error parsing descriptor: {}", e))?;
         let file_path = format!("{}/{}", self.folder, descriptor);
         match remove_file(file_path).await {
             Ok(_) => Ok(()),
@@ -60,7 +65,7 @@ impl Source for LocalSource {
         }
     }
 
-    async fn create(&self) -> Result<String, String> {
+    async fn create(&self) -> Result<Descriptor, String> {
         let mut descriptor = thread_rng()
             .sample_iter(&Alphanumeric)
             .take(self.descriptor_length)
@@ -79,6 +84,6 @@ impl Source for LocalSource {
         file_path = format!("{}/{}", self.folder, descriptor); // this is necessary because the file_path variable is moved into the closure below
         let mut file = File::create(file_path).await.map_err(|e| format!("Error creating file: {}", e))?;
         file.write_all(b"").await.map_err(|e| format!("Error writing file: {}", e))?;
-        Ok(descriptor)
+        Ok(descriptor.into_bytes())
     }
 }

@@ -21,7 +21,7 @@ impl Inode for File {
     }
 
     async fn delete(&mut self, global: Arc<Global>) {
-        self.data.delete(global).await;
+        self.data.delete(global).await.ok(); // TODO: handle errors
     }
 }
 

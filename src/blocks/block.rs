@@ -20,9 +20,8 @@ pub trait Block {
     async fn range(&self, global: Arc<Global>) -> Result<Range<usize>, String>;
     fn get(&self, global: Arc<Global>, range: Range<usize>) -> BoxStream<Result<Vec<u8>, String>>;
     async fn put(&mut self, global: Arc<Global>, data: Vec<u8>, range: Range<usize>) -> Result<(), String>;
-    async fn delete(&self, global: Arc<Global>);
+    async fn delete(&self, global: Arc<Global>) -> Result<(), String>;
     async fn create(global: Arc<Global>, data: Vec<u8>, start: usize) -> Result<BlockType, String>;
-    async fn repair(&self, global: Arc<Global>, range: Range<usize>) -> Result<(), String>;
     fn to_enum(self) -> BlockType;
 }
 
@@ -60,16 +59,12 @@ impl Block for BlockType {
         match_method!(self, put, global, data, range).await
     }
 
-    async fn delete(&self, global: Arc<Global>) {
+    async fn delete(&self, global: Arc<Global>) -> Result<(), String> {
         match_method!(self, delete, global).await
     }
 
     async fn create(global: Arc<Global>, data: Vec<u8>, start: usize) -> Result<BlockType, String> {
         IndirectBlock::create(global, data, start).await // we use indirect blocks, because they will fit any data size
-    }
-
-    async fn repair(&self, global: Arc<Global>, range: Range<usize>) -> Result<(), String> {
-        match_method!(self, repair, global, range).await
     }
 
     fn to_enum(self) -> BlockType {
