@@ -156,6 +156,7 @@ dependencies = [
  "rmp-serde",
  "rust-crypto",
  "serde",
+ "serde_json",
  "serde_yaml",
  "tokio",
 ]

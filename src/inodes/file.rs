@@ -5,7 +5,7 @@ use futures::{StreamExt, stream::BoxStream};
 use serde::{Serialize, Deserialize};
 
 use crate::{blocks::{indirect_block::IndirectBlock, block::{Block, BlockType}}, global::Global};
-use super::{inode::Inode, metadata::Metadata};
+use super::{inode::{Inode, InodeType}, metadata::{Metadata, Size}};
 
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -26,19 +26,25 @@ impl Inode for File {
 }
 
 impl File {
-    async fn create(global: Arc<Global>, data: Vec<u8>) -> Result<Self, String> {
+    pub fn to_enum(self) -> InodeType {
+        InodeType::File(self)
+    }
+
+    pub async fn create(global: Arc<Global>, data: Vec<u8>) -> Result<Self, String> {
+        let size = data.len();
         let block = match IndirectBlock::create(global, data, 0).await? {
             BlockType::Indirect(block) => block,
             _ => panic!("This should never happen"),
         };
-        let metadata = Metadata::new();
+        let mut metadata = Metadata::new();
+        metadata.size = Size::Bytes(size);
         Ok(Self {
             data: block,
             metadata
         })
     }
 
-    fn get(&self, global: Arc<Global>) -> BoxStream<Result<Vec<u8>, String>> {
+    pub fn get(&self, global: Arc<Global>) -> BoxStream<Result<Vec<u8>, String>> {
         Box::pin(async_stream::stream! {
             let range = self.data.range(global.clone()).await?;
             let mut stream = self.data.get(global.clone(), range.clone());

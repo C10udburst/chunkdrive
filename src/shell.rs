@@ -1,6 +1,6 @@
-use std::{sync::Arc, io::Write};
+use std::{sync::Arc, io::{Write, BufReader, Read}};
 
-use crate::{global::Global, inodes::{directory::Directory, inode::{InodeType, Inode}, metadata::{self, Metadata}}, stored::{Stored, self}};
+use crate::{global::Global, inodes::{directory::Directory, inode::{InodeType, Inode}, metadata::Metadata, file::File}, stored::Stored};
 
 use tokio::runtime::Runtime;
 
@@ -87,6 +87,7 @@ const COMMANDS: &[(&str, fn(&Arc<Global>, Vec<String>, &mut Vec<String>, &mut Ve
     ("mkdir", mkdir, "Creates a new directory."),
     ("cd", cd, "Changes the current working directory."),
     ("rm", rm, "Removes a file or directory."),
+    ("upload", upload, "Uploads a file to the drive"),
     ("stat", stat, "Prints metadata about a file or directory."),
     ("dbg", dbg, "Prints debug information about an object."),
     ("root", |_, _, path, cwd| { path.clear(); cwd.clear(); Ok(()) }, "Returns to root directory"),
@@ -305,5 +306,43 @@ fn stat(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &
         print!("{}", stat_format(metadata));
     }
 
+    Ok(())
+}
+
+fn upload(global: &Arc<Global>, args: Vec<String>, _path: &mut Vec<String>, cwd: &mut Vec<Stored>) -> Result<(), String> {
+    if args.len() != 1 {
+        return Err("Usage: upload <file>".to_string());
+    }
+
+    let file_name = args[0].clone().split('/').last().ok_or("Invalid file name.")?.to_string();
+    let file = std::fs::File::open(&args[0]).map_err(|_| "Failed to open file.")?;
+    let mut reader = BufReader::new(file);
+    let mut data = Vec::new();
+
+    reader.read_to_end(&mut data).map_err(|_| "Failed to read file.")?;
+
+    print!("Read {} bytes. Uploading...", data.len());
+
+    let rt = Runtime::new().unwrap();
+    let mut dir = match cwd.last() {
+        Some(cwd) => {
+            let inode: InodeType = rt.block_on(cwd.get(global.clone()))?;
+            match inode {
+                InodeType::Directory(dir) => dir,
+                _ => Err("Not in a directory.".to_string())?
+            }
+        },
+        None => global.get_root()
+    };
+    let file = rt.block_on(File::create(global.clone(), data))?;
+    rt.block_on(dir.add(global.clone(), &file_name, file.to_enum()))?;
+    if cwd.is_empty() {
+        global.save_root(&dir);
+    } else {
+        let cwd = cwd.last_mut().unwrap();
+        rt.block_on(async {
+            cwd.put(global.clone(), dir.to_enum()).await
+        })?;
+    }
     Ok(())
 }

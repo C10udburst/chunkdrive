@@ -63,8 +63,11 @@ impl Directory {
         }
 
         let stored = self.children.remove(name).unwrap();
-        let mut inode: InodeType = stored.get(global.clone()).await?;
-        inode.delete(global.clone()).await;
+        let mut inode: Result<InodeType, String> = stored.get(global.clone()).await;
+        match inode {
+            Ok(ref mut inode) => inode.delete(global.clone()).await,
+            Err(_) => {}
+        }
         stored.delete(global).await;
 
         Ok(())

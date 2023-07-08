@@ -1,5 +1,6 @@
 use async_trait::async_trait;
 use serde::Deserialize;
+use serde_json::json;
 
 use super::source::Source;
 
@@ -19,6 +20,7 @@ struct MessageResponse {
 struct MessageAttachment {
     url: String,
 }
+
 /* #endregion */
 
 #[async_trait]
@@ -28,7 +30,7 @@ impl Source for DiscordWebhook {
     }
 
     async fn get(&self, descriptor: &String) -> Result<Vec<u8>, String> {
-        let url = format!("{}/{}", self.url, descriptor);
+        let url = format!("{}/messages/{}", self.url, descriptor);
         let client = reqwest::Client::new();
         let response = client
             .get(&url)
@@ -50,15 +52,27 @@ impl Source for DiscordWebhook {
     }
 
     async fn put(&self, descriptor: &String, data: Vec<u8>) -> Result<(), String> {
-        let url = format!("{}/{}", self.url, descriptor);
+        let url = format!("{}/messages/{}", self.url, descriptor);
         let client = reqwest::Client::new();
         let data_part = reqwest::multipart::Part::bytes(data)
             .file_name("d")
             .mime_str("application/octet-stream")
             .map_err(|e| format!("Error creating part: {}", e))?;
-        let form = reqwest::multipart::Form::new().part("d", data_part);
+        let payload_part = reqwest::multipart::Part::text(json!({
+           "attachments": [
+               {
+                   "id": 0,
+                   "filename": "d"
+               }
+           ],
+        }).to_string())
+            .mime_str("application/json")
+            .map_err(|e| format!("Error creating part: {}", e))?;
+        let form = reqwest::multipart::Form::new()
+            .part("payload_json", payload_part)
+            .part("files[0]", data_part);
         client
-            .post(&url)
+            .patch(&url)
             .multipart(form)
             .send()
             .await
@@ -67,7 +81,7 @@ impl Source for DiscordWebhook {
     }
 
     async fn delete(&self, descriptor: &String) -> Result<(), String> {
-        let url = format!("{}/{}", self.url, descriptor);
+        let url = format!("{}/messages/{}", self.url, descriptor);
         let client = reqwest::Client::new();
         client
             .delete(&url)
@@ -83,7 +97,20 @@ impl Source for DiscordWebhook {
             .file_name("d")
             .mime_str("application/octet-stream")
             .map_err(|e| format!("Error creating part: {}", e))?;
-        let form = reqwest::multipart::Form::new().part("d", empty);
+        let payload_part = reqwest::multipart::Part::text(json!({
+            "flags": 1<<12, // suppress notifications (@silent) and embeds
+            "attachments": [
+                {
+                    "id": 0,
+                    "filename": "d"
+                }
+            ],
+         }).to_string())
+             .mime_str("application/json")
+             .map_err(|e| format!("Error creating part: {}", e))?;
+        let form = reqwest::multipart::Form::new()
+            .part("payload_json", payload_part)
+            .part("files[0]", empty);
         let response = client
             .post(&self.url)
             .multipart(form)
