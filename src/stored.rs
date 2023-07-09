@@ -17,6 +17,13 @@ pub struct Stored {
     descriptor: Descriptor,
 }
 
+impl PartialEq for Stored {
+    fn eq(&self, other: &Self) -> bool {
+        self.bucket == other.bucket &&
+        self.descriptor == other.descriptor
+    }
+}
+
 impl Stored {
     pub async fn get<T: Deserialize<'static>>(&self, global: Arc<Global>) -> Result<T, String> {
         // Get bucket
