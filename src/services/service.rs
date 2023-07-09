@@ -3,7 +3,7 @@ use serde::Deserialize;
 
 use crate::global::Global;
 
-use super::http::HttpService;
+use super::http::service::HttpService;
 
 pub trait Service {
     fn run(&self, global: Arc<Global>);
