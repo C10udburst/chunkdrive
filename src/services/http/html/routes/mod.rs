@@ -1,1 +1,1 @@
-pub mod files;
+pub mod directory_index;

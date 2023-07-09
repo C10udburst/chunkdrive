@@ -98,6 +98,10 @@ impl Directory {
         self.children.keys().cloned().collect()
     }
 
+    pub fn list_tuples(&self) -> Vec<(String, Stored)> {
+        self.children.iter().map(|(k, v)| (k.clone(), v.clone())).collect()
+    }
+
     pub fn get(&self, name: &String) -> Result<&Stored, String> {
         self.children.get(name)
             .ok_or(format!("File {} does not exist", name))

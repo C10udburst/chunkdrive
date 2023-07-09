@@ -81,4 +81,19 @@ impl Stored {
         bucket.delete(&self.descriptor)
             .await
     }
+
+    pub fn as_url(&self) -> String {
+        format!("{}${}", urlencoding::encode(&self.bucket).replace("$", "%24"), urlencoding::encode_binary(&self.descriptor).replace("$", "%24"))
+    }
+
+    pub fn from_url(bucket: &str, descriptor: &str) -> Result<Stored, String> {     
+        let bucket = urlencoding::decode(bucket).map_err(|_| "Invalid bucket")?.to_string();
+
+        let descriptor = urlencoding::decode_binary(descriptor.as_bytes()).to_vec();
+
+        Ok(Stored {
+            bucket: bucket,
+            descriptor,
+        })
+    }
 }
