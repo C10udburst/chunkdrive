@@ -31,6 +31,9 @@ buckets:
         url: https://discord.com/api/webhooks/1234567890/abcdefghijklmnopqrstuvwxyz
     encryption:  # if you want to use none, you can omit this section
       type: none
+services:
+  - type: http
+    port: 8080
 ```
 
 </details>
@@ -80,6 +83,26 @@ buckets:
 ```
 
 `pat` should have the `repo` scope, so it can create releases and upload files to them.
+
+</details>
+
+## Services
+
+<details>
+<summary>HTTP server</summary>
+
+```yaml
+services:
+  - type: http
+    port: 8080
+    address: 127.0.0.1  # optional
+    see_root: true  # optional
+    readonly: false  # optional
+```
+
+- `address` specifies the address to listen on.
+- `see_root` makes the `/` directory visible. Useful if you want to make a share server where users need to explicitly specify the descriptor to access data.
+- `readonly` makes the server read-only.
 
 </details>
 
