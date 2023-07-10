@@ -49,20 +49,27 @@ pub fn DirectoryIndex(props: &DirectoryIndexProps) -> Html {
                         <DirectoryEntry name={name.clone()} inode={inode.clone()} data={props.data.clone()} path={path.clone()} />
                     }
                 }).collect::<Html>()}
+                if !props.data.config.readonly {
+                    <div class="edit-entries">
+                        <li class="entry create create-file">
+                            <span>{"Upload file"}</span>
+                            <button class="create-btn">{"↑"}</button>
+                            <form action={ format!("/files/{}/", path.join("/")) } method="POST" enctype="multipart/form-data" class="create-form file-upload">
+                                <input type="file" name="file" />
+                                <input type="submit" value="Upload file" />
+                            </form>
+                        </li>
+                        <li class="entry create create-directory">
+                            <span>{"Create directory"}</span>
+                            <button class="create-btn">{"+"}</button>
+                            <form action={ format!("/files/{}/", path.join("/")) } method="POST" enctype="multipart/form-data" class="create-form directory-create">
+                                <input type="text" name="directory_name" placeholder="Directory name" />
+                                <input type="submit" value="Create directory" />
+                            </form>
+                        </li>
+                    </div>
+                }
             </ul>
-            if !props.data.config.readonly {
-                <details class="creation-menu">
-                    <summary>{"Create"}</summary>
-                    <form action={ format!("/files/{}/", path.join("/")) } method="POST" enctype="multipart/form-data" class="file-upload">
-                        <input type="file" name="file" />
-                        <input type="submit" value="Upload file" />
-                    </form>
-                    <form action={ format!("/files/{}/", path.join("/")) } method="POST" enctype="multipart/form-data" class="directory-create">
-                        <input type="text" name="directory_name" placeholder="Directory name" />
-                        <input type="submit" value="Create directory" />
-                    </form>
-                </details>
-            }
         </Layout>
     }
 }

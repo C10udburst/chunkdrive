@@ -30,16 +30,16 @@ pub fn DirectoryEntry(props: &DirectoryEntryProps) -> Html {
             <a href={ url.clone() }>{ &props.name }</a>
             if !props.data.config.readonly {
                 <div class="edit">
-                    <span class="hamburger">{"☰"}</span>
+                    <button class="hamburger">{"☰"}</button>
                     <nav class="menu">
                         <ul>
-                            <li>
+                            <li class="delete-option destructive">
                                 <form action={ url.clone() } method="POST" class="delete">
                                     <input type="hidden" name="request" value="delete" />
                                     <input type="submit" value="Delete" />
                                 </form>
                             </li>
-                            <li>
+                            <li class="cut-option">
                                 <form action={ url } method="POST" class="cut">
                                     <input type="hidden" name="request" value="cut" />
                                     <input type="submit" value="Cut" />

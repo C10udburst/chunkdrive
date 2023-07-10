@@ -37,14 +37,13 @@ pub fn Layout(props: &LayoutProps) -> Html {
                 </script>
             </head>
             <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>{ "chunkdrive" }</h1>
-                    </div>
-                    <div class="content">
-                        { props.children.clone() }
-                    </div>
-                </div>
+                <header>
+                    <span>{ "chunkdrive" }</span>
+                    <input type="checkbox" id="theme-switcher" />
+                </header>
+                <section class="content">
+                    { props.children.clone() }
+                </section>
             </body>
         </html>
     }
