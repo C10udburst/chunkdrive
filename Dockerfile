@@ -4,14 +4,11 @@ FROM rust:alpine as builder
 # Set the working directory inside the container
 WORKDIR /app
 
-# Copy the Cargo.toml and Cargo.lock files to optimize dependency caching
-COPY Cargo.toml Cargo.lock ./
+# copy source code
+COPY . .
 
-# Build dependencies
+# Install cargo dependencies
 RUN cargo fetch
-
-# Copy the source code to the container
-COPY src ./src
 
 # Build the application with optimizations
 RUN cargo build --release
