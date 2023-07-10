@@ -34,13 +34,13 @@ pub fn DirectoryEntry(props: &DirectoryEntryProps) -> Html {
                     <nav class="menu">
                         <ul>
                             <li class="delete-option destructive">
-                                <form action={ url.clone() } method="POST" class="delete">
+                                <form action={ url.clone() } method="POST" class="delete" enctype="multipart/form-data">
                                     <input type="hidden" name="request" value="delete" />
                                     <input type="submit" value="Delete" />
                                 </form>
                             </li>
                             <li class="cut-option">
-                                <form action={ url } method="POST" class="cut">
+                                <form action={ url } method="POST" class="cut" enctype="multipart/form-data">
                                     <input type="hidden" name="request" value="cut" />
                                     <input type="submit" value="Cut" />
                                 </form>

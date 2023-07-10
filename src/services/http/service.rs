@@ -377,25 +377,40 @@ async fn post_got_directory(arc: Arc<ServerData>, path: Vec<String>, directory_n
 }
 
 async fn post_got_delete(arc: Arc<ServerData>, path: Vec<String>) -> HttpResponse {
-    if path.len() < 2 {
+    if path.len() < 1 {
         return HttpResponse::BadRequest()
             .content_type("text/plain")
             .body("Invalid path");
     }
 
     let parent_path = path[..path.len()-1].to_vec();
-    let filename = match path.last() {
-        Some(filename) => filename,
+    let file = match path.last() {
+        Some(filename) => filename.split('$').collect::<Vec<&str>>(),
         None => return HttpResponse::BadRequest()
             .content_type("text/plain")
             .body("Invalid path"),
     };
 
+    if file.len() != 3 {
+        return HttpResponse::BadRequest()
+            .content_type("text/plain")
+            .body("Invalid path");
+    }
+
+    let filename = file[2].to_string();
+
+    let file_stored = match Stored::from_url(file[0], file[1]) {
+        Ok(stored) => stored,
+        Err(e) => return HttpResponse::BadRequest()
+            .content_type("text/plain")
+            .body(e),
+    };
+
     let mut directory;
     let stored: Option<Stored>;
 
-    if !path.is_empty() {
-        stored = match get_stored(&path) {
+    if !parent_path.is_empty() {
+        stored = match get_stored(&parent_path) {
             Ok(stored) => Some(stored),
             Err(e) => return HttpResponse::BadRequest()
                 .content_type("text/plain")
@@ -416,12 +431,19 @@ async fn post_got_delete(arc: Arc<ServerData>, path: Vec<String>) -> HttpRespons
         stored = None;
     }
 
-    let removed = match directory.unlink(filename) {
+    let removed = match directory.unlink(&filename) {
         Ok(removed) => removed,
         Err(e) => return HttpResponse::ServiceUnavailable()
             .content_type("text/plain")
             .body(e),
     };
+
+    // Check if we are deleting the correct file
+    if removed != file_stored {
+        return HttpResponse::ServiceUnavailable()
+            .content_type("text/plain")
+            .body("File not found");
+    }
 
     if stored.is_some() {
         match stored.unwrap().put(arc.global.clone(), directory.to_enum()).await {
