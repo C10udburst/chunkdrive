@@ -67,6 +67,10 @@
     content: $md-create_new_folder;
 }
 
+.entry.paste .create-btn::before {
+    content: $md-content_paste;
+}
+
 .entry .create-btn:hover {
     background-color: var(--overlay-color);
 }

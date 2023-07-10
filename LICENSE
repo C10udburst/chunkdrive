@@ -2,24 +2,38 @@ All Rights Reserved
 
 Copyright (c) 2023
 
-This license ("License") is an agreement between you (the "Licensee") and https://github.com/c10udburst (the "Licensor") regarding the use, copying, modification, distribution, and contribution to the project https://github.com/c10udburst/chunkdrive ("Project"). By using, copying, modifying, distributing, or contributing to the Project, you agree to be bound by the terms and conditions of this License.
+This license ("License") is an agreement between you (the "Licensee") and https://github.com/c10udburst (the "Licensor") regarding the use, copying, modification, distribution, and contribution to the project https://github.com/c10udburst/chunkdrive ("Project").
+By using, copying, modifying, distributing, or contributing to the Project, you agree to be bound by the terms and conditions of this License.
 
 All Rights Reserved:
   The Licensor reserves all rights to the Project and its associated code, including but not limited to the source code, documentation, and any accompanying files.
-  You may not reproduce, distribute, modify, display, perform, or create derivative works of the Project without explicit written permission from the Licensor.
+  You may not reproduce, distribute, modify, display, perform, or create derivative works of the Project without explicit written permission from the Licensor or as expressly provided under this License.
 
 Liability:
   The Project is provided "as is" and the Licensor disclaims all warranties, whether express or implied, including but not limited to any implied warranties of merchantability or fitness for a particular purpose.
   The Licensor shall not be held liable for any damages, claims, or liabilities arising out of the use, distribution, or inability to use the Project, even if the Licensor has been advised of the possibility of such damages.
+  The Licensor does not warrant that the Project will be error-free or that access to the Project will be continuous or uninterrupted.
 
 Private Use:
-  You are permitted to use the Project privately, solely for personal or internal purposes, without any commercial intent.
+  You are permitted to use the Project privately, solely for personal or internal purposes, without any commercial intent. You may use the Project to provide services to others as long as you do not charge for those services or otherwise generate income from the Project. You may not use the Project to provide services to others for which you are compensated in any way, including but not limited to monetary compensation, advertising, or other forms of compensation.
 
 Forking and Pull Requests:
-  You are allowed to fork the Project on GitHub for the purpose of creating a pull request, where you can suggest modifications, improvements, or bug fixes to the Licensor.
-  "Hard forking", defined as creating a separate, independent project based on the Project's code, is explicitly prohibited under this License.
+  You are allowed to fork the Project on GitHub for the purpose of creating a pull request, where you can suggest modifications, improvements, or bug fixes to the Licensor. By opening a pull request, you confirm that you are the owner and/or have the necessary rights to contribute the code and grant the Licensor the following rights:
+  - The right to incorporate, modify, or distribute the code or modifications submitted in the pull request.
+  - The right to use your name, username, or any provided attribution in connection with the Project.
+  - The right to relicense the code under any license, including commercial licenses.
+  - The right to reject or remove any contribution for any reason.
+  The Licensor acknowledges that you retain ownership of the code you contribute via the pull request, subject to the rights granted to the Licensor as stated in this License.
+  "Hard forking", defined as creating a separate, independent project based on the Project's code, is explicitly prohibited under this License. If you wish to create a mirror of the Project, you must acknowledge the Licensor as the original author and provide a link to the original Project.
+
+Attribution:
+  You must retain the original copyright notice and license for any code you use from the Project, including any modifications you make to the Project's code.
+  You must provide attribution to the Licensor in any documentation, advertisement, or other publication that makes reference to the Project or any portion thereof.
+  You must provide a link to the original Project in any documentation, advertisement, or other publication that makes reference to the Project or any portion thereof.
 
 Miscellaneous:
   This License constitutes the entire agreement between the Licensor and the Licensee regarding the Project and supersedes all prior or contemporaneous understandings or agreements.
   The failure of the Licensor to exercise or enforce any right or provision of this License shall not constitute a waiver of such right or provision.
   If any provision of this License is found to be invalid, the parties agree that the remaining provisions shall be enforced to the fullest extent possible.
+
+This License is subject to change at any time without notice.

@@ -11,7 +11,8 @@ use crate::services::http::service::ServerData;
 pub struct DirectoryIndexProps {
     pub path: Vec<String>,
     pub data: Arc<ServerData>,
-    pub dir: Directory
+    pub dir: Directory,
+    pub cut_inode: Option<String>,
 }
 
 impl PartialEq for DirectoryIndexProps {
@@ -67,6 +68,16 @@ pub fn DirectoryIndex(props: &DirectoryIndexProps) -> Html {
                                 <input type="submit" value="Create directory" />
                             </form>
                         </li>
+                        if props.cut_inode.is_some() {
+                            <li class="entry create paste">
+                                <span>{"Paste"}</span>
+                                <button class="create-btn">{"V"}</button>
+                                <form action={ format!("/files/{}/", path.join("/")) } method="POST" enctype="multipart/form-data" class="create-form paste-inode">
+                                    <input type="text" name="paste_name" placeholder="Paste as" />
+                                    <input type="submit" value="Paste" />
+                                </form>
+                            </li>
+                        }
                     </div>
                 }
             </ul>
