@@ -26,6 +26,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+
       - name: Make shared requirements
         run: |
           make docker_shared
