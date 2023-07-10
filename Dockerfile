@@ -7,6 +7,9 @@ WORKDIR /app
 # copy source code
 COPY . .
 
+# Install build dependencies
+RUN apk add --no-cache musl-dev
+
 # Install cargo dependencies
 RUN cargo fetch
 
