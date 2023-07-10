@@ -25,6 +25,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Cargo cache
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-${{ matrix.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
 
@@ -47,11 +58,15 @@ jobs:
         run: |
           make docker_shared
 
-      - name: set the docker name
+      - name: Set the docker name
         run: |
           echo "DOCKER_NAME=${REPO,,}" >> $GITHUB_ENV
         env:
           REPO: ${{ github.repository }}
+
+      - name: Install comple dependencies
+        run: |
+          sudo apt-get install -y musl-tools musl-dev
       
       - uses: actions-rs/toolchain@v1
         with:
