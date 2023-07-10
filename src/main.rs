@@ -20,7 +20,7 @@ mod tests; // this is only included when running tests
 /* #endregion */
 
 // these will be checked if CD_CONFIG_PATH is not set
-const CONFIG_PATHS: [&str; 2] = ["./config.yml", "/etc/chunkdrive/config.yml"];
+const CONFIG_PATHS: [&str; 1] = ["./config.yml"];
 
 fn main() {
     // Find config file path

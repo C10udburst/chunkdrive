@@ -1,5 +1,5 @@
 .ONESHELL:  # so I can use cd
-.PHONY: run run_shell test style.css ./target/debug/chunkdrive
+.PHONY: run run_shell test style.css ./target/debug/chunkdrive docker_shared
 
 style.css:
 	cd style
@@ -7,6 +7,9 @@ style.css:
 
 ./target/debug/chunkdrive:
 	cargo build
+
+# the binaries are compiled into the docker container, so we just make the css file
+docker_shared: style.css
 
 run: ./target/debug/chunkdrive style.css
 	./target/debug/chunkdrive
