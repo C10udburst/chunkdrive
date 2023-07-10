@@ -7,7 +7,7 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /app
 
 # Copy the binary
-COPY /app/target/*/release/chunkdrive ./
+COPY ./target/*/release/chunkdrive ./
 
 # Copy the style.css file
 COPY style.css ./
