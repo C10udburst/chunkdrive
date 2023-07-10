@@ -12,7 +12,7 @@ jobs:
         include:
           - arch: amd64
             cross: false
-            target: amd64-unknown-linux-musl
+            target: x86_64-unknown-linux-gnu
           - arch: arm64
             cross: true
             target: aarch64-unknown-linux-musl 
