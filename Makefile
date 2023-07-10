@@ -3,6 +3,7 @@
 
 style.css:
 	cd style
+	pnpm install --frozen-lockfile
 	pnpm run build
 
 ./target/debug/chunkdrive:
