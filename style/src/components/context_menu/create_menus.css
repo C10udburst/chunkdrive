@@ -10,21 +10,20 @@
     margin-top: 0.5rem;
     padding: 0.25rem 0.5rem;
     border: solid 1px var(--overlay-color);
-    border-radius: var(--border-radius);
+    border-radius: $border-radius;
     background-color: var(--surface-color);
     color: var(--text-color);
-    transition: background-color var(--animation-duration) ease-in-out;
+    transition: background-color $animation-duration ease-in-out;
 }
 
 .create-form input {
-    font-family: var(--main-font);
-    font-size: var(--menu-font-size);
+    font-family: $main-font;
+    font-size: $menu-font-size;
+    outline: none !important;
 }
 
 .create-form input[type="submit"]:hover,
-.create-form input[type="submit"]:focus,
-.create-form input::file-selector-button:hover,
-.create-form input::file-selector-button:focus {
+.create-form input::file-selector-button:hover {
     background-color: var(--overlay-color);
 }
 
@@ -33,14 +32,13 @@
 }
 
 .create-form input[type="text"] {
-    outline: none !important;
     margin-right: 0.5rem;
     padding: 0.25rem 0.5rem;
     border: solid 1px var(--overlay-color);
-    border-radius: var(--border-radius);
+    border-radius: $border-radius;
     background-color: var(--surface-color);
     color: var(--text-color);
-    transition: background-color var(--animation-duration) ease-in-out;
+    transition: background-color $animation-duration ease-in-out;
 }
 
 .create-form {
@@ -50,27 +48,26 @@
     z-index: 100;
     margin-top: 0.25rem;
     padding: 0.5rem;
-    border-radius: var(--border-radius);
+    border-radius: $border-radius;
     background-color: var(--surface-color);
     border: 1px solid var(--overlay-color);
 }
 
 .create-btn::before {
-    font-size: var(--font-size);
+    font-size: $font-size;
     display: block;
     font-family: 'Material Icons';
 }
 
 .entry.create-file .create-btn::before {
-    content: "\e2c3";
+    content: $md-cloud_upload;
 }
 
 .entry.create-directory .create-btn::before {
-    content: "\e2cc";
+    content: $md-create_new_folder;
 }
 
-.entry .create-btn:hover,
-.entry .create-btn:focus {
+.entry .create-btn:hover {
     background-color: var(--overlay-color);
 }
 
@@ -79,10 +76,10 @@
     margin-right: 1rem;
     padding: 0.25rem 0.5rem;
     border: solid 1px var(--overlay-color);
-    border-radius: var(--border-radius);
+    border-radius: $border-radius;
     background-color: var(--surface-color);
     color: var(--text-color);
-    transition: background-color var(--animation-duration) ease-in-out,
+    transition: background-color $animation-duration ease-in-out,
 }
 
 .create-entries {

@@ -4,7 +4,7 @@
   "description": "Builds the style.css file for http interface",
   "main": "index.js",
   "scripts": {
-    "build": "postcss src/style.css -o ../style.css -c postcss.config.js"
+    "build": "postcss src/index.css -o ../style.css -c postcss.config.js"
   },
   "author": "",
   "license": "ISC",
@@ -13,7 +13,12 @@
     "cssnano": "^6.0.1",
     "postcss": "^8.4.25",
     "postcss-cli": "^10.1.0",
-    "postcss-import": "^15.1.0"
+    "postcss-focus": "^6.0.0",
+    "postcss-font-magician": "^3.0.0",
+    "postcss-import": "^15.1.0",
+    "postcss-import-url": "^7.2.0",
+    "postcss-simple-vars": "^7.0.1",
+    "postcss-variable-compress": "^3.0.0"
   },
   "browserslist": [
     "last 2 versions",

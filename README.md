@@ -110,6 +110,10 @@ The HTTP server does not handle authentication or SSL. It was designed to be use
 
 It does not use any JavaScript :sunglasses:
 
+### Preview
+
+![HTTP server preview](https://github.com/C10udburst/chunkdrive/assets/18114966/c7131fd8-a54e-47a5-837e-ce972c68db31)
+
 </details>
 
 ## Debug shell

@@ -1,58 +1,58 @@
 /* Default, light theme */
 body {
-    --base-color: var(--light-base-color);
-    --surface-color: var(--light-surface-color);
-    --overlay-color: var(--light-overlay-color);
-    --text-color: var(--light-text-color);
-    --primary-color: var(--light-primary-color);
-    --red-color: var(--light-red-color);
+    --base-color: $light-base-color;
+    --surface-color: $light-surface-color;
+    --overlay-color: $light-overlay-color;
+    --text-color: $light-text-color;
+    --primary-color: $light-primary-color;
+    --red-color: $light-red-color;
 }
 
 /* If light theme and switch is checked, use dark theme */
 body:has(#theme-switcher:checked) {
-    --base-color: var(--dark-base-color);
-    --surface-color: var(--dark-surface-color);
-    --overlay-color: var(--dark-overlay-color);
-    --text-color: var(--dark-text-color);
-    --primary-color: var(--dark-primary-color);
-    --red-color: var(--dark-red-color);
+    --base-color: $dark-base-color;
+    --surface-color: $dark-surface-color;
+    --overlay-color: $dark-overlay-color;
+    --text-color: $dark-text-color;
+    --primary-color: $dark-primary-color;
+    --red-color: $dark-red-color;
 }
 
 @media (prefers-color-scheme: dark) {
     /* Default dark theme if browser prefers dark theme */
     body {
-        --base-color: var(--dark-base-color);
-        --surface-color: var(--dark-surface-color);
-        --overlay-color: var(--dark-overlay-color);
-        --text-color: var(--dark-text-color);
-        --primary-color: var(--dark-primary-color);
-        --red-color: var(--dark-red-color);
+        --base-color: $dark-base-color;
+        --surface-color: $dark-surface-color;
+        --overlay-color: $dark-overlay-color;
+        --text-color: $dark-text-color;
+        --primary-color: $dark-primary-color;
+        --red-color: $dark-red-color;
     }
 
     /* If dark theme and switch is checked, use light theme */
     body:has(#theme-switcher:checked) {
-        --base-color: var(--light-base-color);
-        --surface-color: var(--light-surface-color);
-        --overlay-color: var(--light-overlay-color);
-        --text-color: var(--light-text-color);
-        --primary-color: var(--light-primary-color);
-        --red-color: var(--light-red-color);
+        --base-color: $light-base-color;
+        --surface-color: $light-surface-color;
+        --overlay-color: $light-overlay-color;
+        --text-color: $light-text-color;
+        --primary-color: $light-primary-color;
+        --red-color: $light-red-color;
     }
 }
 
-/* Styling the switch to look like a teardrop */
+/* Styling the switch, using Material Icons */
 #theme-switcher:before {
     display: block;
     position: relative;
     top: -0.75rem;
     left: -1.25rem;
-    content: "\e891";
+    content: $md-invert_colors;
     font-family: 'Material Icons';
     font-size: 1.5rem;
     color: var(--text-color);
 }
 #theme-switcher:checked:before {
-    content: "\e0c4";
+    content: $md-invert_colors_off;
 }
 #theme-switcher {
     background-color: transparent;

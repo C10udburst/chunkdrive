@@ -1,11 +1,11 @@
 .ONESHELL:  # so I can use cd
-.PHONY: run run_shell test
+.PHONY: run run_shell test style.css ./target/debug/chunkdrive
 
-style.css: $(wildcard style/**)
+style.css:
 	cd style
 	pnpm run build
 
-./target/debug/chunkdrive: $(wildcard src/**)
+./target/debug/chunkdrive:
 	cargo build
 
 run: ./target/debug/chunkdrive style.css

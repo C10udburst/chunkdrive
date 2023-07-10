@@ -6,7 +6,7 @@
 .entry:focus-within .edit .menu,
 .entry:focus .edit .menu {
     display: block;
-    animation: fadeIn var(--animation-duration) ease-in-out;
+    animation: fadeIn $animation-duration ease-in-out;
 }
 
 /* Upload file & create folder buttons */
@@ -17,7 +17,7 @@
 .entry:focus-within .create-form,
 .entry:focus .create-form {
     display: block;
-    animation: fadeIn var(--animation-duration) ease-in-out;
+    animation: fadeIn $animation-duration ease-in-out;
 }
 
 /* Fade in animation */

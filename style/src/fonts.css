@@ -1,3 +1,12 @@
-/* Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans&display=swap');
-@import url('https://fonts.googleapis.com/icon?family=Material+Icons');
+@import 'https://fonts.googleapis.com/css2?family=Rubik&display=swap';
+@import 'https://fonts.googleapis.com/css2?family=Material+Icons';
+
+/* Material icons' aliases */
+$md-invert_colors: "\e891";
+$md-invert_colors_off: "\e0c4";
+$md-delete: "\e872";
+$md-create_new_folder: "\e2cc";
+$md-more_vert: "\e5d4";
+$md-cut: "\e14e";
+$md-cloud_upload: "\e2c3";
+$md-storage: "\e1db";

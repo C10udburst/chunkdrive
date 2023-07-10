@@ -10,9 +10,9 @@
     text-decoration: none;
     padding: 0.25rem 0.5rem;
     color: var(--text-color);
-    border-radius: var(--border-radius);
-    transition: color var(--animation-duration) ease-in-out,
-    background-color var(--animation-duration) ease-in-out;
+    border-radius: $border-radius;
+    transition: color $animation-duration ease-in-out,
+    background-color $animation-duration ease-in-out;
 }
 
 .entry a:hover,
