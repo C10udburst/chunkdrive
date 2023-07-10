@@ -7,7 +7,7 @@
 use std::sync::Arc;
 use serde::{Serialize, Deserialize};
 use rmp_serde::{Serializer, Deserializer};
-use crate::{global::{Global, Descriptor}};
+use crate::global::{Global, Descriptor};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Stored {

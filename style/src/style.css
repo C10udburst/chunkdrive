@@ -1,0 +1,23 @@
+/* Global variables */
+@import './config.css';
+@import './fonts.css';
+
+/* Components */
+@import './components/theme_switcher.css';
+@import './components/header.css';
+@import './components/entry.css';
+
+/* Context menu */
+@import './components/context_menu/visibility.css';
+@import './components/context_menu/create_menus.css';
+@import './components/context_menu/edit_menus.css';
+
+body {
+    font-family: var(--main-font);
+    font-size: var(--font-size);
+    background-color: var(--base-color);
+    transition: background-color var(--animation-duration) ease-in-out;
+    color: var(--text-color);
+    margin: 0;
+}
+

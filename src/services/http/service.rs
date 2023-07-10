@@ -2,11 +2,11 @@ use std::sync::Arc;
 use futures::StreamExt;
 use serde::Deserialize;
 use actix_web::{web, App, HttpServer, Responder, HttpResponse, route};
-use actix_multipart::{form::{MultipartForm, bytes::Bytes, text::Text}};
+use actix_multipart::form::{MultipartForm, bytes::Bytes, text::Text};
 use tokio::io::AsyncReadExt;
 use yew::ServerRenderer;
 
-use crate::{global::{Global}, services::{service::Service}, inodes::{inode::{InodeType, Inode}, directory::Directory, file::File}, stored::Stored};
+use crate::{global::Global, services::service::Service, inodes::{inode::{InodeType, Inode}, directory::Directory, file::File}, stored::Stored};
 
 use super::html::routes::directory_index::{DirectoryIndexProps, DirectoryIndex};
 

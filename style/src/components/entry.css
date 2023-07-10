@@ -1,0 +1,22 @@
+.entry {
+    position: relative;
+    width: fit-content;
+    display: flex;
+    flex-direction: row-reverse;
+    align-items: center;
+}
+
+.entry a {
+    text-decoration: none;
+    padding: 0.25rem 0.5rem;
+    color: var(--text-color);
+    border-radius: var(--border-radius);
+    transition: color var(--animation-duration) ease-in-out,
+    background-color var(--animation-duration) ease-in-out;
+}
+
+.entry a:hover,
+.entry a:focus {
+    color: var(--primary-color);
+    background-color: var(--overlay-color);
+}

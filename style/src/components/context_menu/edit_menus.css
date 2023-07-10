@@ -1,0 +1,88 @@
+.entry .hamburger {
+    font-size: 0;
+    margin-right: 0.5rem;
+    padding: 0.25rem 0.5rem;
+    border: solid 1px var(--overlay-color);
+    border-radius: var(--border-radius);
+    background-color: var(--surface-color);
+    color: var(--text-color);
+    transition: background-color var(--animation-duration) ease-in-out,
+}
+
+.entry .hamburger:hover,
+.entry .hamburger:focus {
+    background-color: var(--overlay-color);
+}
+
+.entry .hamburger::before {
+    font-size: var(--font-size);
+    display: block;
+    font-family: 'Material Icons';
+    content: "\e5d4";
+}
+
+
+.entry .edit .menu {
+    position: absolute;
+    z-index: 100;
+    margin-top: 0.25rem;
+    padding: 0.5rem;
+    border-radius: var(--border-radius);
+    background-color: var(--surface-color);
+    border: 1px solid var(--overlay-color);
+}
+
+.entry .edit .menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.entry .edit .menu li form {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+}
+
+.entry .edit .menu li {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin: 0.25rem 0;
+    border-radius: var(--border-radius);
+    padding: 0.25rem 0.5rem;
+    transition: color var(--animation-duration) ease-in-out, background-color var(--animation-duration) ease-in-out;
+}
+
+.entry .edit .menu li:hover,
+.entry .edit .menu li:focus {
+    color: var(--primary-color);
+    background-color: var(--overlay-color);
+}
+
+.entry .edit .menu li.destructive:hover,
+.entry .edit .menu li.destructive:focus {
+    color: var(--red-color);
+}
+
+.entry .edit .menu li::before {
+    display: inline;
+    font-family: 'Material Icons';
+    content: "";
+}
+
+.entry .edit .menu li.delete-option::before {
+    content: "\e92b";
+}
+.entry .edit .menu li.cut-option::before {
+    content: "\e14e";
+}
+.entry .edit .menu input {
+    display: inline-block;
+    cursor: pointer;
+    background-color: transparent;
+    border: none;
+    color: inherit;
+}

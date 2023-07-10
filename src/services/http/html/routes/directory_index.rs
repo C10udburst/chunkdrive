@@ -50,7 +50,7 @@ pub fn DirectoryIndex(props: &DirectoryIndexProps) -> Html {
                     }
                 }).collect::<Html>()}
                 if !props.data.config.readonly {
-                    <div class="edit-entries">
+                    <div class="create-entries">
                         <li class="entry create create-file">
                             <span>{"Upload file"}</span>
                             <button class="create-btn">{"↑"}</button>

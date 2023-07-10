@@ -1,0 +1,27 @@
+/* Edit menu next to each entry */
+.entry .edit .menu {
+    display: none;
+}
+
+.entry:focus-within .edit .menu,
+.entry:focus .edit .menu {
+    display: block;
+    animation: fadeIn var(--animation-duration) ease-in-out;
+}
+
+/* Upload file & create folder buttons */
+.entry .create-form {
+    display: none;
+}
+
+.entry:focus-within .create-form,
+.entry:focus .create-form {
+    display: block;
+    animation: fadeIn var(--animation-duration) ease-in-out;
+}
+
+/* Fade in animation */
+@keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}

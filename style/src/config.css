@@ -1,0 +1,28 @@
+/* Color scheme based on https://rosepinetheme.com/palette/ */
+:root {
+    /* Fonts */
+    --main-font: 'Noto Sans', sans-serif;
+    --font-size: 1.25rem;
+    --nav-font-size: 1.7rem;
+    --menu-font-size: 1rem;
+
+    /* Colors */
+    --light-base-color: #FAF4ED;
+    --light-surface-color: #FFFAF3;
+    --light-overlay-color: #F2E9E1;
+    --light-text-color: #575279;
+    --light-primary-color: #286983;
+    --light-red-color: #B4637A;
+
+    --dark-base-color: #232136;
+    --dark-surface-color: #2A273F;
+    --dark-overlay-color: #393552;
+    --dark-text-color: #E0DEF4;
+    --dark-primary-color: #3E8FB0;
+    --dark-red-color: #EB6F92;
+
+
+    /* Other */
+    --border-radius: 0.25rem;
+    --animation-duration: 0.2s;
+}
