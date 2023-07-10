@@ -6,7 +6,7 @@ use actix_multipart::{form::{MultipartForm, bytes::Bytes, text::Text}};
 use tokio::io::AsyncReadExt;
 use yew::ServerRenderer;
 
-use crate::{global::{Global}, services::{service::Service}, inodes::{inode::InodeType, directory::Directory, file::File}, stored::Stored};
+use crate::{global::{Global}, services::{service::Service}, inodes::{inode::{InodeType, Inode}, directory::Directory, file::File}, stored::Stored};
 
 use super::html::routes::directory_index::{DirectoryIndexProps, DirectoryIndex};
 
@@ -204,6 +204,7 @@ async fn get(data: web::Data<Arc<ServerData>>, path: web::Path<String>) -> impl 
 pub struct Upload {
     file: Option<Bytes>,
     directory_name: Option<Text<String>>,
+    request: Option<Text<String>>,
 }
 
 #[route("/files/{path:.*}", method = "POST")]
@@ -233,6 +234,17 @@ async fn post(data: web::Data<Arc<ServerData>>, path: web::Path<String>, form: M
         None => {},
     }
 
+    match &form.request {
+        Some(request) => {
+            match request.0.as_str() {
+                "delete" => return post_got_delete(arc, path).await,
+                "cut" => return post_got_cut(arc, path).await,
+                _ => {},
+            }
+        },
+        None => {},
+    }
+
     HttpResponse::BadRequest()
         .content_type("text/plain")
         .body("Invalid POST request")
@@ -241,10 +253,16 @@ async fn post(data: web::Data<Arc<ServerData>>, path: web::Path<String>, form: M
 async fn post_got_file(arc: Arc<ServerData>, path: Vec<String>, file: &Bytes) -> HttpResponse {
     let filename = match file.file_name.clone() {
         Some(name) => name,
-        None => return HttpResponse::BadRequest()
-            .content_type("text/plain")
-            .body("No filename provided"),
+        None => { return HttpResponse::Found()
+            .append_header(("Location", format!("{}files/{}", arc.config.path, path.join("/"))))
+            .finish() }
     };
+
+    if file.data.len() == 0 {
+        return HttpResponse::Found()
+            .append_header(("Location", format!("{}files/{}", arc.config.path, path.join("/"))))
+            .finish();
+    }
 
     let mut directory;
     let stored: Option<Stored>;
@@ -355,6 +373,105 @@ async fn post_got_directory(arc: Arc<ServerData>, path: Vec<String>, directory_n
 
     HttpResponse::Found()
         .append_header(("Location", format!("{}files/{}", arc.config.path, path.join("/"))))
+        .finish()
+}
+
+async fn post_got_delete(arc: Arc<ServerData>, path: Vec<String>) -> HttpResponse {
+    if path.len() < 2 {
+        return HttpResponse::BadRequest()
+            .content_type("text/plain")
+            .body("Invalid path");
+    }
+
+    let parent_path = path[..path.len()-1].to_vec();
+    let filename = match path.last() {
+        Some(filename) => filename,
+        None => return HttpResponse::BadRequest()
+            .content_type("text/plain")
+            .body("Invalid path"),
+    };
+
+    let mut directory;
+    let stored: Option<Stored>;
+
+    if !path.is_empty() {
+        stored = match get_stored(&path) {
+            Ok(stored) => Some(stored),
+            Err(e) => return HttpResponse::BadRequest()
+                .content_type("text/plain")
+                .body(e),
+        };
+
+        directory = match stored.as_ref().unwrap().get::<InodeType>(arc.global.clone()).await {
+            Ok(InodeType::Directory(dir)) => dir,
+            Ok(_) => return HttpResponse::BadRequest()
+                .content_type("text/plain")
+                .body("Path is not a directory"),
+            Err(e) => return HttpResponse::ServiceUnavailable()
+                .content_type("text/plain")
+                .body(e),
+        };
+    } else {
+        directory = arc.global.get_root();
+        stored = None;
+    }
+
+    let removed = match directory.unlink(filename) {
+        Ok(removed) => removed,
+        Err(e) => return HttpResponse::ServiceUnavailable()
+            .content_type("text/plain")
+            .body(e),
+    };
+
+    if stored.is_some() {
+        match stored.unwrap().put(arc.global.clone(), directory.to_enum()).await {
+            Ok(_) => {},
+            Err(e) => return HttpResponse::ServiceUnavailable()
+                .content_type("text/plain")
+                .body(e),
+        };
+    } else {
+        arc.global.save_root(&directory)
+    }
+
+    let mut inode = match removed.get::<InodeType>(arc.global.clone()).await {
+        Ok(inode) => inode,
+        Err(e) => return HttpResponse::ServiceUnavailable()
+            .content_type("text/plain")
+            .body(e),
+    };
+    
+    match inode.delete(arc.global.clone()).await {
+        Ok(_) => {},
+        Err(e) => return HttpResponse::ServiceUnavailable()
+            .content_type("text/plain")
+            .body(e),
+    }
+
+    match removed.delete(arc.global.clone()).await {
+        Ok(_) => {},
+        Err(e) => return HttpResponse::ServiceUnavailable()
+            .content_type("text/plain")
+            .body(e),
+    }
+    
+
+    HttpResponse::Found()
+        .append_header(("Location", format!("{}files/{}", arc.config.path, parent_path.join("/"))))
+        .finish()
+}
+
+async fn post_got_cut(arc: Arc<ServerData>, path: Vec<String>) -> HttpResponse {
+    if path.len() < 2 {
+        return HttpResponse::BadRequest()
+            .content_type("text/plain")
+            .body("Invalid path");
+    }
+
+    let parent_path = path[..path.len()-1].to_vec();
+
+    HttpResponse::Found()
+        .append_header(("Location", format!("{}files/{}", arc.config.path, parent_path.join("/"))))
         .finish()
 }
 
