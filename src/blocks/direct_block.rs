@@ -73,14 +73,14 @@ impl Block for DirectBlock {
     async fn create(global: Arc<Global>, data: Vec<u8>, start: usize) -> Result<BlockType, String> {
         // finding the buckets
         let bucket_name = global.random_bucket().ok_or("No buckets found".to_string())?;
-        let bucket = match global.get_bucket(&bucket_name) {
+        let bucket = match global.get_bucket(bucket_name) {
             Some(bucket) => bucket,
             None => Err("Bucket not found".to_string())?
         };
 
         // slice the data
         let data = data[..std::cmp::min(data.len(), bucket.max_size())].to_vec();
-        if data.len() == 0 {
+        if data.is_empty() {
             return Err("Data is empty".to_string())
         }
 

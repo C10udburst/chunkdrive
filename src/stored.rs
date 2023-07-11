@@ -32,7 +32,7 @@ impl Stored {
         // Get data
         let data = bucket.get(&self.descriptor)
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| e)?;
 
         // Deserialize data
         let mut deserializer = Deserializer::new(&data[..]);
@@ -52,7 +52,7 @@ impl Stored {
         // Put data
         bucket.put(&self.descriptor, data)
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| e)?;
 
         Ok(())
     }
@@ -72,7 +72,7 @@ impl Stored {
         let descriptor = bucket.create().await?;
         bucket.put(&descriptor, data)
             .await
-            .map_err(|e| e.to_string())?;
+            .map_err(|e| e)?;
 
         Ok(Stored {
             bucket: bucket_name.to_owned(),
@@ -90,7 +90,7 @@ impl Stored {
     }
 
     pub fn as_url(&self) -> String {
-        format!("{}${}", urlencoding::encode(&self.bucket).replace("$", "%24"), urlencoding::encode_binary(&self.descriptor).replace("$", "%24"))
+        format!("{}${}", urlencoding::encode(&self.bucket).replace('$', "%24"), urlencoding::encode_binary(&self.descriptor).replace('$', "%24"))
     }
 
     pub fn from_url(bucket: &str, descriptor: &str) -> Result<Stored, String> {     
@@ -99,7 +99,7 @@ impl Stored {
         let descriptor = urlencoding::decode_binary(descriptor.as_bytes()).to_vec();
 
         Ok(Stored {
-            bucket: bucket,
+            bucket,
             descriptor,
         })
     }

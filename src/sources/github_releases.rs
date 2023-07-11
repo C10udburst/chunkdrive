@@ -56,7 +56,7 @@ impl Source for GithubReleases {
     }
 
     async fn get(&self, descriptor: &Descriptor) -> Result<Vec<u8>, String> {
-        let tag = std::str::from_utf8(&descriptor)
+        let tag = std::str::from_utf8(descriptor)
             .map_err(|e| format!("Error parsing descriptor: {}", e))?;
         
         // Get release info
@@ -90,7 +90,7 @@ impl Source for GithubReleases {
     }
 
     async fn put(&self, descriptor: &Descriptor, data: Vec<u8>) -> Result<(), String> {
-        let tag = std::str::from_utf8(&descriptor)
+        let tag = std::str::from_utf8(descriptor)
             .map_err(|e| format!("Error parsing descriptor: {}", e))?;
         
         // Get release info
@@ -134,7 +134,7 @@ impl Source for GithubReleases {
     }
 
     async fn delete(&self, descriptor: &Descriptor) -> Result<(), String> {
-        let tag = std::str::from_utf8(&descriptor)
+        let tag = std::str::from_utf8(descriptor)
             .map_err(|e| format!("Error parsing descriptor: {}", e))?;
         
         let mut errors = Vec::new();
@@ -156,12 +156,10 @@ impl Source for GithubReleases {
                 .await
                 .map_err(|e| format!("Error parsing response: {}", e));
 
-            if parsed.is_err() {
-                errors.push(parsed.err().unwrap());
-            } else {
+            if let Ok(parsed) = parsed.as_ref() {
                 // Delete existing asset(s)
-                let id = parsed.as_ref().unwrap().id.clone();
-                for asset in parsed.unwrap().assets {
+                let id = parsed.id;
+                for asset in &parsed.assets {
                     let url = format!("https://api.github.com/repos/{}/{}/releases/assets/{}", self.owner, self.repo, asset.id);
                     match client
                         .delete(&url)
@@ -183,6 +181,8 @@ impl Source for GithubReleases {
                         Ok(_) => (),
                         Err(e) => errors.push(format!("Error deleting release: {}", e))
                     }
+            } else {
+                errors.push(format!("Error parsing response: {}", parsed.err().unwrap()));
             }
         }
 

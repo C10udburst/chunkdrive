@@ -101,7 +101,9 @@ pub fn shell(global: Arc<Global>) {
     }
 }
 
-const COMMANDS: &[(&str, fn(&Arc<Global>, Vec<String>, &mut Vec<String>, &mut Vec<Stored>, &mut Option<Stored>) -> Result<(), String>, &str)] = &[
+type Command = (&'static str, fn(&Arc<Global>, Vec<String>, &mut Vec<String>, &mut Vec<Stored>, &mut Option<Stored>) -> Result<(), String>, &'static str);
+
+const COMMANDS: &[Command] = &[
     ("help",   help, "Prints this help message."),
     ("exit",   exit, "Exits the shell."),
     ("ls",     ls, "Lists the contents of the current directory."),

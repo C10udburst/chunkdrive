@@ -16,20 +16,15 @@ pub struct Aes {
 }
 
 /* #region AesType */
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Default)]
 pub enum AesType {
     #[serde(rename = "aes128")]
+    #[default]
     Aes128,
     #[serde(rename = "aes192")]
     Aes192,
     #[serde(rename = "aes256")]
     Aes256,
-}
-
-impl Default for AesType {
-    fn default() -> Self {
-        AesType::Aes128
-    }
 }
 
 impl AesType {
@@ -74,8 +69,8 @@ fn to_size(init_key: &Vec<u8>, size: usize) -> Vec<u8> {
     for i in init_key.len()..key.len() {
         let mut tmp = key[i] as u16;
         tmp = tmp << (i%3) | tmp >> (8 - (i%3));
-        tmp = tmp + key[i- init_key.len()] as u16;
-        tmp = tmp % 256;
+        tmp += key[i- init_key.len()] as u16;
+        tmp %= 256;
         key[i] = tmp as u8;
     }
     key
@@ -84,7 +79,7 @@ fn to_size(init_key: &Vec<u8>, size: usize) -> Vec<u8> {
 impl Encryption for Aes {
     fn max_size(&self, source_size: usize) -> usize {
         // how many full blocks fit into the source size
-        return (source_size / self.size.block_size()) * self.size.block_size();
+        (source_size / self.size.block_size()) * self.size.block_size()
     }
 
     fn encrypt(&self, data: Vec<u8>, iv: Vec<u8>) -> Result<Vec<u8>, String> {
@@ -103,13 +98,13 @@ impl Encryption for Aes {
         loop {
             let result = encryptor
                 .encrypt(&mut read_buffer, &mut write_buffer, true)
-                .map_err(|_| format!("Symmetric encryption failed"))?;
+                .map_err(|_| "Symmetric encryption failed")?;
             final_result.extend(
                 write_buffer
                     .take_read_buffer()
                     .take_remaining()
                     .iter()
-                    .map(|&i| i),
+                    .cloned()
             );
             match result {
                 buffer::BufferResult::BufferUnderflow => break,

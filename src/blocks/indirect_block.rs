@@ -87,7 +87,7 @@ impl Block for IndirectBlock {
                 Err(err) => errors.push(err),
             }
         }
-        if errors.len() > 0 {
+        if errors.is_empty() {
             Err(errors.join(", "))
         } else {
             Ok(())

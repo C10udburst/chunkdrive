@@ -23,7 +23,7 @@ impl PartialEq for DirectoryEntryProps {
 
 #[function_component]
 pub fn DirectoryEntry(props: &DirectoryEntryProps) -> Html {
-    let url = format!("/files/{}/{}${}", props.path.join("/"), props.inode.as_url(), props.name.replace("$", "%24"));
+    let url = format!("/files/{}/{}${}", props.path.join("/"), props.inode.as_url(), props.name.replace('$', "%24"));
 
     html! {
         <li class="entry inode">

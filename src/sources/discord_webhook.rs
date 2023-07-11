@@ -31,7 +31,7 @@ impl Source for DiscordWebhook {
     }
 
     async fn get(&self, descriptor: &Descriptor) -> Result<Vec<u8>, String> {
-        let snowflake = std::str::from_utf8(&descriptor)
+        let snowflake = std::str::from_utf8(descriptor)
             .map_err(|e| format!("Error parsing descriptor: {}", e))?;
         let url = format!("{}/messages/{}", self.url, snowflake);
         let client = reqwest::Client::new();
@@ -55,7 +55,7 @@ impl Source for DiscordWebhook {
     }
 
     async fn put(&self, descriptor: &Descriptor, data: Vec<u8>) -> Result<(), String> {
-        let snowflake = std::str::from_utf8(&descriptor)
+        let snowflake = std::str::from_utf8(descriptor)
             .map_err(|e| format!("Error parsing descriptor: {}", e))?;
         let url = format!("{}/messages/{}", self.url, snowflake);
         let client = reqwest::Client::new();
@@ -83,7 +83,7 @@ impl Source for DiscordWebhook {
     }
 
     async fn delete(&self, descriptor: &Descriptor) -> Result<(), String> {
-        let snowflake = std::str::from_utf8(&descriptor)
+        let snowflake = std::str::from_utf8(descriptor)
             .map_err(|e| format!("Error parsing descriptor: {}", e))?;
         let url = format!("{}/messages/{}", self.url, snowflake);
         let client = reqwest::Client::new();

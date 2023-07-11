@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::{time::{SystemTime, UNIX_EPOCH}, cmp::Ordering};
 
-#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Ord, Clone)]
+#[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Clone)]
 pub enum Size {
     #[serde(rename = "e")]
     Entries(usize),
@@ -62,10 +62,7 @@ pub struct Metadata {
 }
 
 const fn is_default(size: &Size) -> bool {
-    match size {
-        Size::Empty => true,
-        _ => false,
-    }
+    matches!(size, Size::Empty)
 }
 
 impl Metadata {

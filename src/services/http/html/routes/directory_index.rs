@@ -25,7 +25,7 @@ impl PartialEq for DirectoryIndexProps {
 pub fn DirectoryIndex(props: &DirectoryIndexProps) -> Html {    
     // for each part of the path where <a>$<b>$<c> strip $<c> if it exists
     let path = props.path.iter().map(|part| {
-        let parts = part.split("$").collect::<Vec<&str>>();
+        let parts = part.split('$').collect::<Vec<&str>>();
         if parts.len() <= 2 {
             return part.clone();
         }
