@@ -195,10 +195,12 @@ impl Source for GithubReleases {
             .await
             .map_err(|e| format!("Error sending request: {}", e))?;
     
-        if !errors.is_empty() {
-            return Err(errors.join(", "));
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(errors.join(", "))
         }
-        Ok(())
+        
     }
 
     async fn create(&self) -> Result<Descriptor, String> {

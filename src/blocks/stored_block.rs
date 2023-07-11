@@ -49,9 +49,9 @@ impl Block for StoredBlock {
             Err(e) => errors.push(e)
         }
         if errors.is_empty() {
-            Err(errors.join(", "))
-        } else {
             Ok(())
+        } else {
+            Err(errors.join(", "))
         }
     }
 

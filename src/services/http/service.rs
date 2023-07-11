@@ -107,13 +107,17 @@ async fn get_inode(data: Arc<ServerData>, path: &Vec<String>) -> Result<InodeTyp
 async fn render_directory(data: Arc<ServerData>, path: Vec<String>, directory: Directory, cookie: Option<cookie::Cookie<'static>>) -> HttpResponse {
     let renderer: ServerRenderer<_> = ServerRenderer::<DirectoryIndex>::with_props(|| {
         DirectoryIndexProps {
-            data: data,
-            path: path,
+            data,
+            path,
             dir: directory,
-            cut_inode: cookie.map(|cookie| match cookie.value() {
-                "" => None,
-                value => Some(value.to_string()),
-            }).flatten(),
+            cut_inode: if let Some(cookie) = cookie {
+                match cookie.value() {
+                    "" => None,
+                    value => Some(value.to_string()),
+                }
+            } else {
+                None
+            }
         }
     });
     let html = renderer.render().await;
@@ -214,7 +218,7 @@ async fn get(data: web::Data<Arc<ServerData>>, path: web::Path<String>, req: Htt
         return render_error(arc, "Unauthorized.\nYou can change the see_root setting in the config file.".to_string()).await;
     }
 
-    let path = path.into_inner().split("/").map(|part| part.to_string()).filter(|part| !part.is_empty()).collect::<Vec<String>>();
+    let path = path.into_inner().split('/').map(|part| part.to_string()).filter(|part| !part.is_empty()).collect::<Vec<String>>();
     
     let inode = match path.is_empty() {
         true => arc.global.get_root().to_enum(),
@@ -270,7 +274,7 @@ async fn post(data: web::Data<Arc<ServerData>>, path: web::Path<String>, form: M
         return render_error(arc, "Unauthorized.\nYou can change the see_root setting in the config file.".to_string()).await;
     }
 
-    let path = path.into_inner().split("/").map(|part| part.to_string()).filter(|part| !part.is_empty()).collect::<Vec<String>>();
+    let path = path.into_inner().split('/').map(|part| part.to_string()).filter(|part| !part.is_empty()).collect::<Vec<String>>();
 
     match &form.file {
         Some(file) => return match post_got_file(arc.clone(), path, file).await {
@@ -327,7 +331,7 @@ async fn post_got_file(arc: Arc<ServerData>, path: Vec<String>, file: &Bytes) ->
             .finish()) }
     };
 
-    if file.data.len() == 0 {
+    if file.data.is_empty() {
         return Ok(HttpResponse::Found()
             .append_header(("Location", format!("{}files/{}", arc.config.path, path.join("/"))))
             .finish());
@@ -401,7 +405,7 @@ async fn post_got_directory(arc: Arc<ServerData>, path: Vec<String>, directory_n
         stored = None;
     }
 
-    match directory.add(arc.global.clone(), &directory_name, Directory::new().to_enum()).await {
+    match directory.add(arc.global.clone(), directory_name, Directory::new().to_enum()).await {
         Ok(_) => {},
         Err(e) => Err(e)?,
     };
@@ -424,7 +428,7 @@ async fn post_got_directory(arc: Arc<ServerData>, path: Vec<String>, directory_n
 }
 
 async fn post_got_delete(arc: Arc<ServerData>, path: Vec<String>) -> Result<HttpResponse, String> {
-    if path.len() < 1 {
+    if path.is_empty() {
         return Err("Invalid path".to_string());
     }
 
@@ -505,7 +509,7 @@ async fn post_got_delete(arc: Arc<ServerData>, path: Vec<String>) -> Result<Http
 }
 
 async fn post_got_cut(arc: Arc<ServerData>, path: Vec<String>) -> Result<HttpResponse, String> {
-    if path.len() < 1 {
+    if path.is_empty() {
         return Err("Invalid path".to_string());
     }
 

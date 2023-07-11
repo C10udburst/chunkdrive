@@ -36,7 +36,7 @@ impl Global {
         self.buckets.get(name)
     }
     
-    pub fn next_bucket(&self, max_size: usize, exclude: &Vec<&String>) -> Option<&String> {
+    pub fn next_bucket(&self, max_size: usize, exclude: &[String]) -> Option<&String> {
         self.buckets
             .iter()
             .filter(|(_, bucket)| bucket.max_size() >= max_size)

@@ -88,9 +88,9 @@ impl Block for IndirectBlock {
             }
         }
         if errors.is_empty() {
-            Err(errors.join(", "))
-        } else {
             Ok(())
+        } else {
+            Err(errors.join(", "))
         }
     }
 

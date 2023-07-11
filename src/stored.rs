@@ -31,8 +31,7 @@ impl Stored {
 
         // Get data
         let data = bucket.get(&self.descriptor)
-            .await
-            .map_err(|e| e)?;
+            .await?;
 
         // Deserialize data
         let mut deserializer = Deserializer::new(&data[..]);
@@ -51,8 +50,7 @@ impl Stored {
 
         // Put data
         bucket.put(&self.descriptor, data)
-            .await
-            .map_err(|e| e)?;
+            .await?;
 
         Ok(())
     }
@@ -71,8 +69,7 @@ impl Stored {
         // Put data
         let descriptor = bucket.create().await?;
         bucket.put(&descriptor, data)
-            .await
-            .map_err(|e| e)?;
+            .await?;
 
         Ok(Stored {
             bucket: bucket_name.to_owned(),

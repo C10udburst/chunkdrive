@@ -131,13 +131,13 @@ impl Encryption for Aes {
         loop {
             let result = decryptor
                 .decrypt(&mut read_buffer, &mut write_buffer, true)
-                .map_err(|_| format!("Symmetric decryption failed"))?;
+                .map_err(|_| "Symmetric decryption failed")?;
             final_result.extend(
                 write_buffer
                     .take_read_buffer()
                     .take_remaining()
                     .iter()
-                    .map(|&i| i),
+                    .cloned()
             );
             match result {
                 buffer::BufferResult::BufferUnderflow => break,
