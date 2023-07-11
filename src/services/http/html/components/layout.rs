@@ -35,6 +35,7 @@ pub fn Layout(props: &LayoutProps) -> Html {
                         props.data.config.path
                     )}
                 </script>
+                <script src="/static/script.js"></script>
             </head>
             <body>
                 <header>

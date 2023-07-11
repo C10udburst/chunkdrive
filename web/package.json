@@ -1,14 +1,16 @@
 {
-  "name": "style",
+  "name": "Web",
   "version": "1.0.0",
-  "description": "Builds the style.css file for http interface",
-  "main": "index.js",
+  "description": "Builds necessary files for the web interface",
   "scripts": {
-    "build": "postcss src/index.css -o ../style.css -c postcss.config.js"
+    "build-style": "postcss src/style/index.css -o ../style.css -c postcss.config.js",
+    "build-script": "rollup -c"
   },
+  "type": "module",
   "author": "",
   "license": "Custom",
   "dependencies": {
+    "@rollup/plugin-typescript": "^11.1.2",
     "autoprefixer": "^10.4.14",
     "cssnano": "^6.0.1",
     "postcss": "^8.4.25",
@@ -17,7 +19,10 @@
     "postcss-import": "^15.1.0",
     "postcss-import-url": "^7.2.0",
     "postcss-simple-vars": "^7.0.1",
-    "postcss-variable-compress": "^3.0.0"
+    "postcss-variable-compress": "^3.0.0",
+    "rollup": "^3.26.2",
+    "rollup-plugin-uglify": "^6.0.4",
+    "tslib": "^2.6.0"
   },
   "browserslist": [
     "last 2 versions",

@@ -31,6 +31,9 @@ pub struct HttpService {
 
     #[serde(default = "fn_style")]
     pub(crate) style_path: String,
+
+    #[serde(default = "fn_script")]
+    pub(crate) script_path: String,
 }
 
 #[derive(Debug)]
@@ -44,6 +47,7 @@ fn default_path() -> String { "/".to_string() }
 const fn fn_false() -> bool { false }
 const fn fn_true() -> bool { true }
 fn fn_style() -> String { "./style.css".to_string() }
+fn fn_script() -> String { "./script.js".to_string() }
 
 impl Service for HttpService {
     fn run(&self, global: Arc<Global>) {
@@ -66,6 +70,7 @@ fn run_blocking(data: Arc<ServerData>) -> Result<(), String> {
             App::new()
                 .app_data(web::Data::new(data_clone.clone()))
                 .service(style)
+                .service(script)
                 .service(redirect)
                 .service(get)
                 .service(post)
@@ -140,6 +145,36 @@ async fn style(data: web::Data<Arc<ServerData>>) -> impl Responder {
         .content_type("text/css")
         .streaming(async_stream::stream! {
             let file = match tokio::fs::File::open(&data.config.style_path).await {
+                Ok(file) => file,
+                Err(e) => {
+                    yield Err(e);
+                    return;
+                }
+            };
+            let mut buffered_reader = tokio::io::BufReader::new(file);
+            let mut buffer = vec![0; 2048];
+            loop {
+                let bytes_read = match buffered_reader.read(&mut buffer).await {
+                    Ok(bytes_read) => bytes_read,
+                    Err(e) => {
+                        yield Err(e);
+                        return;
+                    }
+                };
+                if bytes_read == 0 {
+                    return;
+                }
+                yield Ok(web::Bytes::from(buffer[..bytes_read].to_vec()));
+            }
+        })
+}
+
+#[route("/static/script.js", method = "GET")]
+async fn script(data: web::Data<Arc<ServerData>>) -> impl Responder {
+    HttpResponse::Ok()
+        .content_type("text/javascript")
+        .streaming(async_stream::stream! {
+            let file = match tokio::fs::File::open(&data.config.script_path).await {
                 Ok(file) => file,
                 Err(e) => {
                     yield Err(e);

@@ -33,7 +33,6 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            target/
           key: ${{ runner.os }}-${{ matrix.arch }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Set up QEMU
@@ -56,7 +55,7 @@ jobs:
 
       - name: Make shared requirements
         run: |
-          make docker_shared
+          make web
 
       - name: Set the docker name
         run: |

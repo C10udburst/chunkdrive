@@ -4,6 +4,7 @@ body {
     --surface-color: $light-surface-color;
     --overlay-color: $light-overlay-color;
     --menu-color: $light-menu-color;
+    --screen-overlay-color: $light-screen-overlay-color;
     --text-color: $light-text-color;
     --primary-color: $light-primary-color;
     --red-color: $light-red-color;
@@ -15,6 +16,7 @@ body:has(#theme-switcher:checked) {
     --surface-color: $dark-surface-color;
     --overlay-color: $dark-overlay-color;
     --menu-color: $dark-menu-color;
+    --screen-overlay-color: $dark-screen-overlay-color;
     --text-color: $dark-text-color;
     --primary-color: $dark-primary-color;
     --red-color: $dark-red-color;
@@ -27,6 +29,7 @@ body:has(#theme-switcher:checked) {
         --surface-color: $dark-surface-color;
         --overlay-color: $dark-overlay-color;
         --menu-color: $dark-menu-color;
+        --screen-overlay-color: $dark-screen-overlay-color;
         --text-color: $dark-text-color;
         --primary-color: $dark-primary-color;
         --red-color: $dark-red-color;
@@ -38,6 +41,7 @@ body:has(#theme-switcher:checked) {
         --surface-color: $light-surface-color;
         --overlay-color: $light-overlay-color;
         --menu-color: $light-menu-color;
+        --screen-overlay-color: $light-screen-overlay-color;
         --text-color: $light-text-color;
         --primary-color: $light-primary-color;
         --red-color: $light-red-color;

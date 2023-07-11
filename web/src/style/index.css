@@ -7,6 +7,7 @@
 @import './components/theme_switcher.css';
 @import './components/header.css';
 @import './components/entry.css';
+@import './components/overlay.css';
 
 /* Context menu */
 @import './components/context_menu/visibility.css';

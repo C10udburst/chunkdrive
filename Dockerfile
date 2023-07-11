@@ -9,12 +9,14 @@ WORKDIR /app
 # Copy the binary
 COPY --chown=root:root ./target/*/release/chunkdrive ./
 
-# Copy the style.css file
+# Copy web assets
 COPY --chown=root:root style.css ./
+COPY --chown=root:root script.js ./
 
 # Set permissions
 RUN chmod 755 chunkdrive
 RUN chmod 644 style.css
+RUN chmod 644 script.js
 
 USER root
 

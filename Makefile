@@ -1,18 +1,22 @@
 .ONESHELL:  # so I can use cd
-.PHONY: run run_shell test style.css ./target/debug/chunkdrive docker_shared
+.PHONY: run run_shell test style.css script.js ./target/debug/chunkdrive web
 
 style.css:
-	cd style
+	cd web
 	pnpm install --frozen-lockfile
-	pnpm run build
+	pnpm run build-style
+
+script.js:
+	cd web
+	pnpm install --frozen-lockfile
+	pnpm run build-script
+
+web: style.css script.js
 
 ./target/debug/chunkdrive:
 	cargo build
 
-# the binaries are compiled into the docker container, so we just make the css file
-docker_shared: style.css
-
-run: ./target/debug/chunkdrive style.css
+run: ./target/debug/chunkdrive web
 	./target/debug/chunkdrive
 
 run_shell: ./target/debug/chunkdrive

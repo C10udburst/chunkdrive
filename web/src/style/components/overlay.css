@@ -1,0 +1,39 @@
+.overlay {
+    display: none;
+    cursor: move; /* fallback if grab is not supported */
+    cursor: grab;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--screen-overlay-color);
+}
+
+.overlay.show {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: overlayAnim $animation-duration ease-in-out forwards;
+}
+
+#drag-overlay::before {
+    content: $md-cloud_upload;
+    display: block;
+    font-family: 'Material Icons';
+    font-size: 5rem;
+    color: var(--text-color);
+    animation: overlayAnim $animation-duration ease-in-out forwards;
+}
+
+@keyframes overlayAnim {
+    from {
+        opacity: 0;
+        backdrop-filter: none;
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: $screen-overlay-backdrop;
+    }
+}
