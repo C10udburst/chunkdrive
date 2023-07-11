@@ -3,6 +3,7 @@
 @import './fonts.css';
 
 /* Components */
+@import './components/banner.css';
 @import './components/theme_switcher.css';
 @import './components/header.css';
 @import './components/entry.css';

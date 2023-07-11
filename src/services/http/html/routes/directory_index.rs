@@ -12,7 +12,7 @@ pub struct DirectoryIndexProps {
     pub path: Vec<String>,
     pub data: Arc<ServerData>,
     pub dir: Directory,
-    pub cut_inode: Option<String>,
+    pub cut_inode: Option<String>
 }
 
 impl PartialEq for DirectoryIndexProps {
@@ -20,7 +20,6 @@ impl PartialEq for DirectoryIndexProps {
         self.path == other.path
     }
 }
-
 
 #[function_component]
 pub fn DirectoryIndex(props: &DirectoryIndexProps) -> Html {    

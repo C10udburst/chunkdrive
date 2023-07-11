@@ -3,6 +3,7 @@ body {
     --base-color: $light-base-color;
     --surface-color: $light-surface-color;
     --overlay-color: $light-overlay-color;
+    --menu-color: $light-menu-color;
     --text-color: $light-text-color;
     --primary-color: $light-primary-color;
     --red-color: $light-red-color;
@@ -13,6 +14,7 @@ body:has(#theme-switcher:checked) {
     --base-color: $dark-base-color;
     --surface-color: $dark-surface-color;
     --overlay-color: $dark-overlay-color;
+    --menu-color: $dark-menu-color;
     --text-color: $dark-text-color;
     --primary-color: $dark-primary-color;
     --red-color: $dark-red-color;
@@ -24,6 +26,7 @@ body:has(#theme-switcher:checked) {
         --base-color: $dark-base-color;
         --surface-color: $dark-surface-color;
         --overlay-color: $dark-overlay-color;
+        --menu-color: $dark-menu-color;
         --text-color: $dark-text-color;
         --primary-color: $dark-primary-color;
         --red-color: $dark-red-color;
@@ -34,6 +37,7 @@ body:has(#theme-switcher:checked) {
         --base-color: $light-base-color;
         --surface-color: $light-surface-color;
         --overlay-color: $light-overlay-color;
+        --menu-color: $light-menu-color;
         --text-color: $light-text-color;
         --primary-color: $light-primary-color;
         --red-color: $light-red-color;

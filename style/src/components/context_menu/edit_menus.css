@@ -27,7 +27,8 @@
     margin-top: 0.25rem;
     padding: 0.5rem;
     border-radius: $border-radius;
-    background-color: var(--surface-color);
+    background-color: var(--menu-color);
+    backdrop-filter: $menu-backdrop;
     border: 1px solid var(--overlay-color);
 }
 

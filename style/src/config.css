@@ -9,6 +9,7 @@ $menu-font-size: 1rem;
 $light-base-color: #FAF4ED;
 $light-surface-color: #FFFAF3;
 $light-overlay-color: #F2E9E1;
+$light-menu-color: $light-surface-color;
 $light-text-color: #575279;
 $light-primary-color: #286983;
 $light-red-color: #B4637A;
@@ -16,6 +17,7 @@ $light-red-color: #B4637A;
 $dark-base-color: #232136;
 $dark-surface-color: #2A273F;
 $dark-overlay-color: #393552;
+$dark-menu-color: $dark-surface-color;
 $dark-text-color: #E0DEF4;
 $dark-primary-color: #3E8FB0;
 $dark-red-color: #EB6F92;
@@ -23,3 +25,4 @@ $dark-red-color: #EB6F92;
 /* Other */
 $border-radius: 0.25rem;
 $animation-duration: 0.2s;
+$menu-backdrop: none; /* you can use backdrop-filter here, eg blur(5px);, but if so you need to make $light-menu-color and $dark-menu-color slightly transparent */

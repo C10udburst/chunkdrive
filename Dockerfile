@@ -3,6 +3,10 @@ FROM alpine:latest
 # Install system dependencies
 RUN apk --no-cache add ca-certificates
 
+# Create a group and user
+RUN addgroup -S chunkdrive && adduser -S chunkdrive -G chunkdrive
+USER chunkdrive:chunkdrive
+
 # Set the working directory inside the container
 WORKDIR /app
 
@@ -13,4 +17,4 @@ COPY ./target/*/release/chunkdrive ./
 COPY style.css ./
 
 # Set the command to run the application
-CMD ["./chunkdrive"]
+CMD ["/app/chunkdrive"]
