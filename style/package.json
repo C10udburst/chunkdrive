@@ -14,7 +14,6 @@
     "postcss": "^8.4.25",
     "postcss-cli": "^10.1.0",
     "postcss-focus": "^6.0.0",
-    "postcss-font-magician": "^3.0.0",
     "postcss-import": "^15.1.0",
     "postcss-import-url": "^7.2.0",
     "postcss-simple-vars": "^7.0.1",

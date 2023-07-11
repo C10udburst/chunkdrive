@@ -7,8 +7,7 @@ module.exports = {
         require('postcss-import-url')(),
         require('postcss-variable-compress')(),
         require('cssnano')({
-            preset: 'default',
-        }),
-        require('postcss-font-magician')()
+            preset: 'default'
+        })
     ]
 }

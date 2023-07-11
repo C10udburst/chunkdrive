@@ -20,9 +20,6 @@ dependencies:
   postcss-focus:
     specifier: ^6.0.0
     version: 6.0.0(postcss@8.4.25)
-  postcss-font-magician:
-    specifier: ^3.0.0
-    version: 3.0.0(postcss@8.4.25)
   postcss-import:
     specifier: ^15.1.0
     version: 15.1.0(postcss@8.4.25)
@@ -64,11 +61,6 @@ packages:
     engines: {node: '>=10.13.0'}
     dev: false
 
-  /amdefine@1.0.1:
-    resolution: {integrity: sha512-S2Hw0TtNkMJhIabBwIojKL9YHO5T0n5eNqWJ7Lrlel/zDbftQpxpapi8tZs3X1HWa+u+QeydGmzzNU0m09+Rcg==}
-    engines: {node: '>=0.4.2'}
-    dev: false
-
   /ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
     engines: {node: '>=8'}
@@ -105,14 +97,6 @@ packages:
       postcss-value-parser: 4.2.0
     dev: false
 
-  /b3b@0.0.1:
-    resolution: {integrity: sha512-wWUK79hNEsHN1PTHwHsGYpTNupgaovM39g6374uoIL1gfVSwK2q9flM1DFyvSEYkELRWf5aMGSf7bkGGNSl0Jw==}
-    dev: false
-
-  /base64-js@1.5.1:
-    resolution: {integrity: sha512-AKpaYlHn8t4SVbOHCy+b5+KKgvR4vrsD8vbvrbiQJps7fKDTkjkDry6ji0rUJjC0kzbNePLwzxq8iypo41qeWA==}
-    dev: false
-
   /binary-extensions@2.2.0:
     resolution: {integrity: sha512-jDctJ/IVQbZoJykoeHbhXpOlNBqGNcwXJKJog42E5HDPUwQTSdjCHdihjj0DlnheQ7blbT6dHOafNAiS8ooQKA==}
     engines: {node: '>=8'}
@@ -122,23 +106,11 @@ packages:
     resolution: {integrity: sha512-JZOSA7Mo9sNGB8+UjSgzdLtokWAky1zbztM3WRLCbZ70/3cTANmQmOdR7y2g+J0e2WXywy1yS468tY+IruqEww==}
     dev: false
 
-  /bootstrap-fonts-complete@1.0.0:
-    resolution: {integrity: sha512-5K+ELLuM3NepCFr1OlkNNkAwrUg4MNM0BeCBhj2qDbCbl2FwqOL0Uu49UVU0hKO8b6sgtXtgoh1o3qoWMTbpDw==}
-    dependencies:
-      postcss: 4.1.16
-    dev: false
-
   /braces@3.0.2:
     resolution: {integrity: sha512-b8um+L1RzM3WDSzvhm6gIz1yfTbBt6YTlcEKAvsmqCZZFw46z626lVj9j1yEPW33H5H+lBQpZMP1k8l+78Ha0A==}
     engines: {node: '>=8'}
     dependencies:
       fill-range: 7.0.1
-    dev: false
-
-  /brotli@1.3.3:
-    resolution: {integrity: sha512-oTKjJdShmDuGW94SyyaoQvAjf30dZaHnjJ8uAF+u2/vGJkJbJPJAT1gDiOJP5v1Zb6f9KEyW/1HpuaWIXtGHPg==}
-    dependencies:
-      base64-js: 1.5.1
     dev: false
 
   /browserslist@4.21.9:
@@ -332,17 +304,6 @@ packages:
       path-type: 4.0.0
     dev: false
 
-  /directory-fonts-complete@1.2.0:
-    resolution: {integrity: sha512-/d3kxZmVS+2v774mZ9SoU7H93TsAvQNpf4s/guQTva3pQSxtwUWN9dSF+Zls7sfA8ybReuR92SQMhxxUTSIGvA==}
-    dependencies:
-      brotli: 1.3.3
-      is-eot: 1.0.0
-      is-otf: 0.1.2
-      is-ttf: 0.2.2
-      is-woff: 1.0.3
-      is-woff2: 1.0.0
-    dev: false
-
   /dom-serializer@2.0.0:
     resolution: {integrity: sha512-wIkAryiqt/nV5EQKqQpo3SToSOV9J0DnbJqwK7Wv/Trc92zIAYZ4FlMu+JPFW1DfGFt81ZTCGgDEabffXeLyJg==}
     dependencies:
@@ -381,10 +342,6 @@ packages:
   /entities@4.5.0:
     resolution: {integrity: sha512-V0hjH4dGPh9Ao5p0MoRY6BVqtwCjhz6vI5LT8AJ55H+4g9/4vbHx1I54fS0XuclLhDHArPQCiMjDxjaL8fPxhw==}
     engines: {node: '>=0.12'}
-    dev: false
-
-  /es6-promise@2.3.0:
-    resolution: {integrity: sha512-oyOjMhyKMLEjOOtvkwg0G4pAzLQ9WdbbeX7WdqKzvYXu+UFgD0Zo/Brq5Q49zNmnGPPzV5rmYvrr0jz1zWx8Iw==}
     dev: false
 
   /escalade@3.1.1:
@@ -469,12 +426,6 @@ packages:
       slash: 4.0.0
     dev: false
 
-  /google-fonts-complete@2.1.1:
-    resolution: {integrity: sha512-6e7jXyadmW4iHrrmYitcsoyVpcymjndBsgXLeo0XXXbAqU9xhM06OxxJAiPqSrp9Xn2bvBueOTe091lwkKVc1g==}
-    dependencies:
-      postcss: 7.0.39
-    dev: false
-
   /graceful-fs@4.2.11:
     resolution: {integrity: sha512-RbJ5/jmFcNNCcDV5o9eTnBLJ/HszWV0P73bc+Ff4nS/rJj+YaS6IGyiOL0VoBYX+l1Wrl3k63h/KrH+nhJ0XvQ==}
     dev: false
@@ -508,11 +459,6 @@ packages:
       has: 1.0.3
     dev: false
 
-  /is-eot@1.0.0:
-    resolution: {integrity: sha512-hPQF4rLYEe9VGVGr6aGrc0Yf5s8MOaEsY8SUi/IySicowWu10/Cr60+JVsVEl7v2MD+TbhwBWjudCK6OycPr7g==}
-    engines: {node: '>=0.10.0'}
-    dev: false
-
   /is-extglob@2.1.1:
     resolution: {integrity: sha512-SbKbANkN603Vi4jEZv49LeVJMn4yGwsbzZworEoyEiutsN3nJYdbO36zfhGJ6QEDpOZIFkDtnq5JRxmvl3jsoQ==}
     engines: {node: '>=0.10.0'}
@@ -535,36 +481,8 @@ packages:
     engines: {node: '>=0.12.0'}
     dev: false
 
-  /is-otf@0.1.2:
-    resolution: {integrity: sha512-0usgFT/986IQ0zFN4iQUKebPpHNAwA34f8qQC+Y8L1R379odRzS4pc1GCqBRL6P6AlGUoK/0/GYY6AYgD0anRA==}
-    engines: {node: '>=0.10.0'}
-    dependencies:
-      b3b: 0.0.1
-    dev: false
-
-  /is-ttf@0.2.2:
-    resolution: {integrity: sha512-0NWCiYnyH8gvyBkLcnG8nBBgz6ZqFqgSS37jTTQKGF/y7Wrf6KKr9EmW7ExcxFoE0WU1mKcnMElRf9QOUNxAmQ==}
-    engines: {node: '>=0.10.0'}
-    dependencies:
-      b3b: 0.0.1
-    dev: false
-
   /is-url@1.2.4:
     resolution: {integrity: sha512-ITvGim8FhRiYe4IQ5uHSkj7pVaPDrCTkNd3yq3cV7iZAcJdHTUMPMEHcqSOy9xZ9qFenQCvi+2wjH9a1nXqHww==}
-    dev: false
-
-  /is-woff2@1.0.0:
-    resolution: {integrity: sha512-7RmH5rCoOpB0FpHtMHuQOXZjWyaFoCHmjCA72DlyHQ5SAVZC0/RDhhs/88Dzucr5qyU4eA0QvDbiW56IarjsnQ==}
-    engines: {node: '>=0.10.0'}
-    dev: false
-
-  /is-woff@1.0.3:
-    resolution: {integrity: sha512-gm8k3MyCWQaum1kE91X8GYPuUIS/SeBleKfi85Oszeqn2pHNSY4TP5AUKFCLTaruX2HzLv9dQmS8+N8vDJtrQA==}
-    engines: {node: '>=0.10.0'}
-    dev: false
-
-  /js-base64@2.1.9:
-    resolution: {integrity: sha512-f+5mYh8iF7FlF7zgmj/yqvvYQUHI0kAxGiLjIfNxZzqJ7RQNc4sjgp8crVJw0Kzv2O6aFGZWgMTnO71I9utHSg==}
     dev: false
 
   /jsonfile@6.1.0:
@@ -650,10 +568,6 @@ packages:
   /path-type@4.0.0:
     resolution: {integrity: sha512-gDKb8aZMDeD/tZWs9P6+q0J9Mwkdl6xMV8TjnGP3qJVJ06bdMgkbBlLU8IdfOsIsFz2BW1rNVT3XuNEl8zPAvw==}
     engines: {node: '>=8'}
-    dev: false
-
-  /picocolors@0.2.1:
-    resolution: {integrity: sha512-cMlDqaLEqfSaW8Z7N5Jw+lyIW869EzT73/F5lhtY9cLGoVxSXznfgfXMO0Z5K0o0Q2TkTXq+0KFsdnSe3jDViA==}
     dev: false
 
   /picocolors@1.0.0:
@@ -771,18 +685,6 @@ packages:
     peerDependencies:
       postcss: ^8.1.0
     dependencies:
-      postcss: 8.4.25
-    dev: false
-
-  /postcss-font-magician@3.0.0(postcss@8.4.25):
-    resolution: {integrity: sha512-PqGk9TeIoWzytZeLW6AtgzuL1sJb0bO0xPr4daI6MEhidqyCMECJmwXIlAS6ypf18y6tR04cDFbLqlQruXQiIA==}
-    engines: {node: ^10 || ^12 || >=14}
-    peerDependencies:
-      postcss: ^8.0.0
-    dependencies:
-      bootstrap-fonts-complete: 1.0.0
-      directory-fonts-complete: 1.2.0
-      google-fonts-complete: 2.1.1
       postcss: 8.4.25
     dev: false
 
@@ -1081,22 +983,6 @@ packages:
       postcss: 8.4.25
     dev: false
 
-  /postcss@4.1.16:
-    resolution: {integrity: sha512-aAutxE8MvL1bHylFMYb2c2nniFax8XDztHzZ+x5DVsNJnoW6VHvGSNSqdW3+ip255HCWfPjayVVFzMmyiL7opA==}
-    dependencies:
-      es6-promise: 2.3.0
-      js-base64: 2.1.9
-      source-map: 0.4.4
-    dev: false
-
-  /postcss@7.0.39:
-    resolution: {integrity: sha512-yioayjNbHn6z1/Bywyb2Y4s3yvDAeXGOyxqD+LnVOinq6Mdmd++SW2wUNVzavyyHxd6+DxzWGIuosg6P1Rj8uA==}
-    engines: {node: '>=6.0.0'}
-    dependencies:
-      picocolors: 0.2.1
-      source-map: 0.6.1
-    dev: false
-
   /postcss@8.4.25:
     resolution: {integrity: sha512-7taJ/8t2av0Z+sQEvNzCkpDynl0tX3uJMCODi6nT3PfASC7dYCWV9aQ+uiCf+KBD4SEFcu+GvJdGdwzQ6OSjCw==}
     engines: {node: ^10 || ^12 || >=14}
@@ -1181,18 +1067,6 @@ packages:
 
   /source-map-js@1.0.2:
     resolution: {integrity: sha512-R0XvVJ9WusLiqTCEiGCmICCMplcCkIwwR11mOSD9CR5u+IXYdiseeEuXCVAjS54zqwkLcPNnmU4OeJ6tUrWhDw==}
-    engines: {node: '>=0.10.0'}
-    dev: false
-
-  /source-map@0.4.4:
-    resolution: {integrity: sha512-Y8nIfcb1s/7DcobUz1yOO1GSp7gyL+D9zLHDehT7iRESqGSxjJ448Sg7rvfgsRJCnKLdSl11uGf0s9X80cH0/A==}
-    engines: {node: '>=0.8.0'}
-    dependencies:
-      amdefine: 1.0.1
-    dev: false
-
-  /source-map@0.6.1:
-    resolution: {integrity: sha512-UjgapumWlbMhkBgzT7Ykc5YXUT46F0iKu8SGXq0bcwP5dz/h0Plj6enJqjz1Zbq2l5WaqYnrVbwWOWMyF3F47g==}
     engines: {node: '>=0.10.0'}
     dev: false
 
