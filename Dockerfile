@@ -16,9 +16,7 @@ COPY --chown=root:root style.css ./
 RUN chmod 755 chunkdrive
 RUN chmod 644 style.css
 
-# Create a group and user
-RUN addgroup -S chunkdrive && adduser -S chunkdrive -G chunkdrive
-USER chunkdrive:chunkdrive
+USER root
 
 # Set the command to run the application
-CMD ["/app/chunkdrive"]
+CMD ["/bin/sh", "-c", "/app/chunkdrive"]

@@ -104,7 +104,7 @@ services:
 - `address` specifies the address to listen on.
 - `see_root` makes the `/` directory visible. Useful if you want to make a share server where users need to explicitly specify the descriptor to access data.
 - `readonly` makes the server read-only.
-- `style_path` specifies a path to a CSS file that will be used to style the web interface. Tip: if you want to make minor changes, you should edit [./style/src/config.css](./style/src/config.css) and run `npm run build` to generate a new CSS file.
+- `style_path` specifies a path to a CSS file that will be used to style the web interface. Tip: if you want to make minor changes, you should edit [./style/src/config.css](./style/src/config.css) and run `pnpm run build` to generate a new CSS file.
 The HTTP server does not handle authentication or SSL. It was designed to be used behind a reverse proxy like nginx.
 
 It does not use any JavaScript :sunglasses:
