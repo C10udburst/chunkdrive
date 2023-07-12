@@ -1,3 +1,5 @@
+import { upload } from "./form-upload";
+
 function showOverlay() {
     const overlay = document.getElementById('drag-overlay');
     overlay.classList.add('show');
@@ -20,7 +22,7 @@ function drop(e: DragEvent) {
     const form = document.querySelector('form.file-upload') as HTMLFormElement;
     const input = form.querySelector('input[type="file"]') as HTMLInputElement;
 
-    let files = e.dataTransfer.files;
+    const files = e.dataTransfer.files;
 
     if (files.length === 0) {
         return;
@@ -32,20 +34,20 @@ function drop(e: DragEvent) {
     }
     
     input.files = files;
-    form.submit();
+    upload(form);
 }
 
 function preventDefaults (e: Event) {
     e.preventDefault()
     e.stopPropagation()
-  }
+}
 
 export function initDragDrop() {
-    let overlay = document.createElement('div');
+    const overlay = document.createElement('div');
     overlay.classList.add('overlay');
     overlay.id = 'drag-overlay';
 
-    let body = document.querySelector('body');
+    const body = document.querySelector('body');
     body.appendChild(overlay);
 
     window.addEventListener('dragenter', showOverlay, false);

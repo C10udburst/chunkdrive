@@ -112,7 +112,9 @@ The interface is fully working without JavaScript. There are only minor things t
 
 - Drag and drop upload
 - Theme preference saving
+- Upload progress bar
 - Warn on delete
+- Warn on leaving the page while uploading
 
 ### Preview
 

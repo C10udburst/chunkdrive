@@ -13,6 +13,7 @@
 
 .overlay.show {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
     animation: overlayAnim $animation-duration ease-in-out forwards;
@@ -25,6 +26,25 @@
     font-size: 5rem;
     color: var(--text-color);
     animation: overlayAnim $animation-duration ease-in-out forwards;
+}
+
+#progress-overlay .progress-container {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    width: -webkit-fill-available;
+    margin: 1rem 2rem;
+    height: 0.33rem;
+    background-color: var(--overlay-color);
+}
+
+#progress-overlay .progress-bar {
+    width: 0%;
+    height: 0.33rem;
+    background-color: var(--primary-color);
+    animation: overlayAnim $animation-duration ease-in-out forwards;
+    transition: width $animation-duration linear;
+    border-radius: 0.33rem;
 }
 
 @keyframes overlayAnim {
