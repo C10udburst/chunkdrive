@@ -8,6 +8,8 @@ chunkdrive is a proof of concept tool that allows you to store vast amounts of d
 
 Each chunk is send to a random so called "bucket". Each bucket can be configured to use a different storage service and encryption method.
 
+https://github.com/C10udburst/chunkdrive/assets/18114966/9642d82e-05e6-4727-ac8a-569dc1578711
+
 ## Configuration
 
 chunkdrive is configured using a YAML file, by default it looks for `config.yaml` in the current directory, but you can specify a different path using the `CD_CONFIG_PATH` environment variable.
@@ -115,10 +117,6 @@ The interface is fully working without JavaScript. There are only minor things t
 - Upload progress bar
 - Warn on delete
 - Warn on leaving the page while uploading
-
-### Preview
-
-![HTTP server preview](https://github.com/C10udburst/chunkdrive/assets/18114966/c7131fd8-a54e-47a5-837e-ce972c68db31)
 
 </details>
 
